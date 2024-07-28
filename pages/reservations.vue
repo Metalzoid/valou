@@ -5,7 +5,6 @@ await $session.redirect_to_login();
 async function get_data() {
   event.preventDefault();
   const response = await $api.get.show_appointment(39);
-  console.log(response.data);
 }
 
 async function post_data() {
@@ -17,7 +16,6 @@ async function post_data() {
       available: "true",
     },
   });
-  console.log(response);
 }
 </script>
 <template>

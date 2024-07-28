@@ -1,50 +1,21 @@
 <script setup>
 import { ref } from "vue";
-import { useNuxtApp } from "#app";
 
-const { $session } = useNuxtApp();
+const email = ref("");
+const password = ref("");
+const { login } = useLogin();
+const { logout } = useLogout();
 
-const user = ref({
-  email: "",
-  password: "",
-});
-
-async function handleLogin() {
-  await $session.login(user.value.email, user.value.password);
-}
-async function logout() {
-  await $session.logout();
-}
+const handleLogin = async () => {
+  const result = await login(email.value, password.value);
+};
 </script>
 
 <template>
-  <div>
-    <div class="title">
-      <h2>Login</h2>
-    </div>
-    <div class="container form">
-      <label for="email"><b>Email</b></label>
-      <input
-        v-model="user.email"
-        type="text"
-        class="input"
-        placeholder="Enter Email"
-        name="email"
-        required
-      />
-
-      <label for="password"><b>Password</b></label>
-      <input
-        v-model="user.password"
-        type="password"
-        class="input"
-        placeholder="Enter Password"
-        name="password"
-        required
-      />
-
-      <button @click.prevent="handleLogin" class="button">Login</button>
-      <button @click.prenvent="logout">test</button>
-    </div>
-  </div>
+  <form @submit.prevent="handleLogin">
+    <input v-model="email" type="email" placeholder="Email" required />
+    <input v-model="password" type="password" placeholder="Password" required />
+    <button type="submit">Login</button>
+  </form>
+  <button @click="logout">Logout</button>
 </template>
