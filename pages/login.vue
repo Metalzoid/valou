@@ -3,8 +3,7 @@ import { ref } from "vue";
 
 const email = ref("");
 const password = ref("");
-const { login } = useLogin();
-const { logout } = useLogout();
+const { login, logout } = useSession();
 
 const handleLogin = async () => {
   const result = await login(email.value, password.value);
