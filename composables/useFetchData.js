@@ -33,7 +33,10 @@ export default function useFetchData() {
         return { success: false, err };
       }
     } else {
-      await navigateTo("/login");
+      return {
+        success: false,
+        message: "You need to be authentificated to perform fetch.",
+      };
     }
   };
 
@@ -58,7 +61,10 @@ export default function useFetchData() {
         return { success: false, err };
       }
     } else {
-      await navigateTo("/login");
+      return {
+        success: false,
+        message: "You need to be authentificated to perform fetch.",
+      };
     }
   };
 

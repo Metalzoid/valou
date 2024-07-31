@@ -1,19 +1,10 @@
 <script setup>
-function scrollToTop() {
+const scrollToTop = () => {
   window.scrollTo({
     top: 0,
     behavior: "smooth",
   });
-}
-
-function scrollToTopMain() {
-  if (route.fullPath === "/") {
-    window.scrollTo({
-      top: 0,
-      behavior: "smooth",
-    });
-  }
-}
+};
 </script>
 
 <template>

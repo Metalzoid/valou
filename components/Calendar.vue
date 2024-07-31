@@ -1,40 +1,3 @@
-<template>
-  <div>
-    <div class="container mx-auto mt-5">
-      <UFormGroup label="Vendors" description="Select a vendor.">
-        <USelect v-model="vendor" :options="vendorOptions" />
-      </UFormGroup>
-      <FullCalendar :options="calendarOptions" ref="calendarRef" />
-    </div>
-    <UModal v-model="isOpen" prevent-close>
-      <UCard
-        :ui="{
-          ring: '',
-          divide: 'divide-y divide-gray-100 dark:divide-gray-800',
-        }"
-      >
-        <template #header>
-          <div class="flex items-center justify-between">
-            <h3
-              class="text-base font-semibold leading-6 text-gray-900 dark:text-white"
-            >
-              Prendre un rendez-vous
-            </h3>
-            <UButton
-              color="gray"
-              variant="ghost"
-              icon="i-heroicons-x-mark-20-solid"
-              class="-my-1"
-              @click="isOpen = false"
-            />
-          </div>
-          <DatePicker v-model="date" is-required @close="close" />
-        </template>
-      </UCard>
-    </UModal>
-  </div>
-</template>
-
 <script>
 import { ref, onMounted, watch, computed } from "vue";
 import FullCalendar from "@fullcalendar/vue3";
@@ -58,12 +21,14 @@ export default {
 
     const getVendors = async () => {
       const response = await get("vendors");
-      vendors.value = response.data.vendors.map((vendor) => ({
-        id: vendor.id,
-        firstname: vendor.firstname,
-      }));
-      if (vendors.value.length > 0) {
-        vendor.value = vendors.value[0].id; // Set the initial selected vendor ID
+      if (response) {
+        vendors.value = response.data.vendors.map((vendor) => ({
+          id: vendor.id,
+          firstname: vendor.firstname,
+        }));
+        if (vendors.value.length > 0) {
+          vendor.value = vendors.value[0].id; // Set the initial selected vendor ID
+        }
       }
     };
 
@@ -139,6 +104,43 @@ export default {
   },
 };
 </script>
+
+<template>
+  <div>
+    <div class="container mx-auto mt-5">
+      <UFormGroup label="Vendors" description="Select a vendor.">
+        <USelect v-model="vendor" :options="vendorOptions" />
+      </UFormGroup>
+      <FullCalendar :options="calendarOptions" ref="calendarRef" />
+    </div>
+    <UModal v-model="isOpen" prevent-close>
+      <UCard
+        :ui="{
+          ring: '',
+          divide: 'divide-y divide-gray-100 dark:divide-gray-800',
+        }"
+      >
+        <template #header>
+          <div class="flex items-center justify-between">
+            <h3
+              class="text-base font-semibold leading-6 text-gray-900 dark:text-white"
+            >
+              Prendre un rendez-vous
+            </h3>
+            <UButton
+              color="gray"
+              variant="ghost"
+              icon="i-heroicons-x-mark-20-solid"
+              class="-my-1"
+              @click="isOpen = false"
+            />
+          </div>
+          <DatePicker v-model="date" is-required @close="close" />
+        </template>
+      </UCard>
+    </UModal>
+  </div>
+</template>
 
 <style scoped>
 /* Ajoutez des styles CSS pour votre composant ici */

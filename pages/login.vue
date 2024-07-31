@@ -7,6 +7,11 @@ const { login, logout } = useSession();
 
 const handleLogin = async () => {
   const result = await login(email.value, password.value);
+  if (result.success) {
+    const redirectPath = localStorage.getItem("redirectAfterLogin") || "/";
+    localStorage.removeItem("redirectAfterLogin");
+    return navigateTo(redirectPath);
+  }
 };
 </script>
 

@@ -4,6 +4,7 @@ import nuxtStorage from "nuxt-storage";
 export default function useSession() {
   const config = useRuntimeConfig();
   const apiBase = config.public.apiBase;
+
   let tokenExpirationTimer = null;
 
   const login = async (email, password) => {
@@ -62,7 +63,7 @@ export default function useSession() {
         if (response.ok) {
           cookie.value = null;
           nuxtStorage.localStorage.removeItem("user");
-          // clearTokenExpirationTimer();
+          clearTokenExpirationTimer();
           return { success: true };
         }
       } catch (error) {
