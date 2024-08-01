@@ -1,16 +1,20 @@
 <script setup>
 import { ref } from "vue";
+import { useRouter } from "vue-router";
 
 const email = ref("");
 const password = ref("");
 const { login, logout } = useSession();
+const router = useRouter();
 
 const handleLogin = async () => {
   const result = await login(email.value, password.value);
   if (result.success) {
-    const redirectPath = localStorage.getItem("redirectAfterLogin") || "/";
-    localStorage.removeItem("redirectAfterLogin");
-    return navigateTo(redirectPath);
+    if (typeof window !== "undefined") {
+      const redirectPath = localStorage.getItem("redirectAfterLogin") || "/";
+      localStorage.removeItem("redirectAfterLogin");
+      return router.push(redirectPath);
+    }
   }
 };
 </script>

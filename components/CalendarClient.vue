@@ -18,6 +18,7 @@ export default {
     const vendors = ref([]);
     const vendor = ref(null);
     const calendarRef = ref(null);
+    const eventsLoaded = ref(false); // To prevent duplicate API calls
 
     const getVendors = async () => {
       const response = await get("vendors");
@@ -44,21 +45,27 @@ export default {
     };
 
     const refreshCalendar = async () => {
-      const events = await getAvailabilities();
-      if (calendarRef.value) {
-        const calendarApi = calendarRef.value.getApi();
-        calendarApi.removeAllEvents();
-        calendarApi.addEventSource(events);
+      if (!eventsLoaded.value) {
+        // Ensure this function is not called redundantly
+        const events = await getAvailabilities();
+        if (calendarRef.value) {
+          const calendarApi = calendarRef.value.getApi();
+          calendarApi.removeAllEvents();
+          calendarApi.addEventSource(events);
+          eventsLoaded.value = true; // Mark events as loaded
+        }
       }
     };
 
     onMounted(async () => {
       await getVendors();
-      refreshCalendar();
     });
 
-    watch(vendor, () => {
-      refreshCalendar();
+    watch(vendor, async (newVendor) => {
+      if (newVendor) {
+        eventsLoaded.value = false; // Reset eventsLoaded when vendor changes
+        await refreshCalendar();
+      }
     });
 
     const calendarOptions = ref({
@@ -77,14 +84,6 @@ export default {
       slotMinTime: "07:00:00",
       slotMaxTime: "19:00:00",
       expandRows: true,
-      events: async (info, successCallback, failureCallback) => {
-        try {
-          const events = await getAvailabilities();
-          successCallback(events);
-        } catch (error) {
-          failureCallback(error);
-        }
-      },
       eventClick: function (info) {
         isOpen.value = true;
       },
@@ -99,7 +98,7 @@ export default {
       calendarRef,
       vendorOptions: computed(() =>
         vendors.value.map((v) => ({ label: v.firstname, value: v.id }))
-      ), // vendor options for select
+      ),
     };
   },
 };
