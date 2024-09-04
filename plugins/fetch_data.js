@@ -15,14 +15,17 @@ export default defineNuxtPlugin((nuxtApp) => {
     } else {
       try {
         const cookie = useCookie("jwt_token");
-        const response = await fetch(`http://localhost:3001/${path}`, {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            Accept: "application/json",
-            Authorization: `Bearer ${cookie.value}`,
-          },
-        });
+        const response = await fetch(
+          `https://datescalendar.fr/api/v1/${path}`,
+          {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+              Accept: "application/json",
+              Authorization: `Bearer ${cookie.value}`,
+            },
+          }
+        );
 
         if (response.ok) {
           const data = await response.json();
@@ -40,15 +43,18 @@ export default defineNuxtPlugin((nuxtApp) => {
     } else {
       try {
         const cookie = useCookie("jwt_token");
-        const response = await fetch(`http://localhost:3001/${path}`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Accept: "application/json",
-            Authorization: `Bearer ${cookie.value}`,
-          },
-          body: JSON.stringify(query),
-        });
+        const response = await fetch(
+          `https://datescalendar.fr/api/v1/${path}`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Accept: "application/json",
+              Authorization: `Bearer ${cookie.value}`,
+            },
+            body: JSON.stringify(query),
+          }
+        );
 
         if (response.ok) {
           const data = await response.json();
@@ -66,7 +72,7 @@ export default defineNuxtPlugin((nuxtApp) => {
         get: {
           async availabilities() {
             try {
-              const response = await fetch_get_api("availabilities");
+              const response = await fetch_get_api("availabilities?interval=30");
               if (response.success) {
                 return { success: true, data: response.data };
               }

@@ -6,7 +6,7 @@ export default function useLogout() {
     const cookie = useCookie("jwt_token");
     if (cookie.value != undefined) {
       try {
-        const response = await fetch("http://localhost:3001/logout", {
+        const response = await fetch("https://datescalendar.fr/api/v1/logout", {
           method: "DELETE",
           headers: {
             "Content-Type": "application/json",

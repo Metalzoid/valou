@@ -1,7 +1,7 @@
 import { useCookie } from "#app";
 import nuxtStorage from "nuxt-storage";
 
-export default function useLogin() {
+export default function useApi() {
   let tokenExpirationTimer = null;
   const login = async (email, password) => {
     try {
@@ -55,6 +55,80 @@ export default function useLogin() {
       return { success: false, error };
     }
   };
+  const logout = async () => {
+    const cookie = useCookie("jwt_token");
+
+    if (cookie.value != undefined) {
+      try {
+        const response = await fetch("https://datescalendar.fr/api/v1/logout", {
+          method: "DELETE",
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+            Authorization: cookie.value,
+          },
+        });
+
+        if (response.ok) {
+          cookie.value = null;
+          nuxtStorage.localStorage.removeItem("user");
+          console.log("Succesfully disconnected.");
+
+          // clearTokenExpirationTimer();
+          return { success: true };
+        } else {
+          const errorData = await response.json();
+          throw new Error(
+            errorData.message || errorData.error || "An unknown error occurred"
+          );
+        }
+      } catch (error) {
+        console.error("There was a problem with the logout request:", error);
+        return { success: false, error };
+      }
+    }
+  };
+  const register = async (
+    email,
+    password,
+    firstname,
+    lastname,
+    role,
+    company
+  ) => {
+    try {
+      const config = useRuntimeConfig();
+      const response = await fetch("https://datescalendar.fr/api/v1/signup", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+          APIKEY: config.public.ADMIN_API_KEY,
+        },
+        body: JSON.stringify({
+          user: { email, password, firstname, lastname, role, company },
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(
+          errorData.message || errorData.error || "An unknown error occurred"
+        );
+      } else {
+        const successData = await response.json();
+        console.log(successData.message);
+      }
+
+      // Handle success response here
+    } catch (error) {
+      console.error(
+        "There was a problem with the signup request:",
+        error.message
+      );
+      return { success: false, error: error.message };
+    }
+  };
 
   function setTokenExpirationTimer(tokenExpiry) {
     clearTokenExpirationTimer();
@@ -74,5 +148,7 @@ export default function useLogin() {
 
   return {
     login,
+    logout,
+    register,
   };
 }

@@ -3,7 +3,12 @@ export default defineNuxtConfig({
   compatibilityDate: "2024-04-03",
   devtools: { enabled: true },
   modules: ["@nuxt/ui"],
-  plugins: ["~/plugins/session_controller.js", "~/plugins/fetch_data.js"],
+  plugins: ["~/plugins/fetch_data.js"],
+  runtimeConfig: {
+    public: {
+      ADMIN_API_KEY: process.env.ADMIN_API_KEY,
+    },
+  },
   css: ["@fortawesome/fontawesome-svg-core/styles.css"],
   imports: {
     dirs: [

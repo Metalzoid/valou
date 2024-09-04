@@ -1,8 +1,8 @@
 <template>
   <div id="modalCalendar"></div>
-  <!-- <div class="container mx-auto mt-5">
+  <div class="container mx-auto mt-5">
     <FullCalendar :options="calendarOptions" />
-  </div> -->
+  </div>
   <UModal v-model="isOpen" prevent-close>
     <UCard
       :ui="{
@@ -48,7 +48,8 @@ export default {
     const getAvailabilities = async () => {
       const { $api } = useNuxtApp();
       const response = await $api.get.availabilities();
-      const dates = response.data.dates;
+      const dates = response.data.data.dates;
+      console.log(dates);
       return dates.map((date) => ({
         title: "Disponible",
         start: new Date(date.from),
@@ -82,6 +83,7 @@ export default {
       },
       eventClick: function (info) {
         isOpen.value = true;
+        console.log(info);
       },
     });
 
