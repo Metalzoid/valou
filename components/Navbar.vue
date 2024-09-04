@@ -6,6 +6,12 @@ function toggleNavMobile() {
     mobileChecked.value = false;
   }
 }
+const scrollToTop = () => {
+  window.scrollTo({
+    top: 0,
+    behavior: "smooth",
+  });
+};
 </script>
 
 <style>
@@ -17,7 +23,7 @@ function toggleNavMobile() {
     <div>
       <header>
         <div id="navigation">
-          <NuxtLink to="/" @click="scrollToTopMain()"
+          <NuxtLink to="/" @click="scrollToTop()"
             ><img class="logo" src="/img/logo.png" alt="logo"
           /></NuxtLink>
           <div id="nav">
@@ -25,7 +31,7 @@ function toggleNavMobile() {
               <li>
                 <NuxtLink
                   to="/"
-                  @click="scrollToTopMain()"
+                  @click="scrollToTop()"
                   :class="{ active: route.path === '/' }"
                   >Accueil</NuxtLink
                 >
@@ -59,7 +65,7 @@ function toggleNavMobile() {
                   <NuxtLink
                     to="/"
                     class="active"
-                    @click="toggleNavMobile(), scrollToTopMain()"
+                    @click="toggleNavMobile(), scrollToTop()"
                     >Accueil</NuxtLink
                   >
                 </li>
@@ -189,7 +195,6 @@ function toggleNavMobile() {
     display: none;
   }
 }
-
 
 .page-enter-active,
 .page-leave-active {

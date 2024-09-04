@@ -7,6 +7,7 @@ export default defineNuxtConfig({
   runtimeConfig: {
     public: {
       ADMIN_API_KEY: process.env.ADMIN_API_KEY,
+      apiBase: process.env.API_BASE_URL,
     },
   },
   css: ["@fortawesome/fontawesome-svg-core/styles.css"],

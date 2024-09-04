@@ -1,5 +1,6 @@
 <script setup>
 import { ref } from "vue";
+import { useRouter } from "vue-router";
 
 const email = ref("");
 const password = ref("");
@@ -7,6 +8,13 @@ const { login, logout, register } = useApi();
 
 const handleLogin = async () => {
   const result = await login(email.value, password.value);
+  if (result.success) {
+    if (typeof window !== "undefined") {
+      const redirectPath = localStorage.getItem("redirectAfterLogin") || "/";
+      localStorage.removeItem("redirectAfterLogin");
+      return router.push(redirectPath);
+    }
+  }
 };
 
 const handleRegister = async () => {
