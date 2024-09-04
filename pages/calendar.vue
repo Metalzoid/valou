@@ -17,6 +17,6 @@ if (typeof window !== "undefined") {
 </script>
 
 <template>
-  <CalendarClient v-if="user.role === 'client'" />
-  <CalendarVendor v-if="user.role === 'vendor'" />
+  <CalendarCustomer v-if="user.role === 'customer'" />
+  <CalendarSeller v-if="user.role === 'seller'" />
 </template>

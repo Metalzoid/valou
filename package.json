@@ -23,6 +23,7 @@
     "@fullcalendar/vue3": "^6.1.15",
     "@nuxt/ui": "^2.17.0",
     "@types/lodash": "^4.17.7",
+    "@vuepic/vue-datepicker": "^9.0.2",
     "date-fns": "^3.6.0",
     "nuxt": "^3.12.3",
     "nuxt-storage": "^1.2.2",

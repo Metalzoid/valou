@@ -4,15 +4,13 @@ import FullCalendar from "@fullcalendar/vue3";
 import interactionPlugin from "@fullcalendar/interaction";
 import timeGridPlugin from "@fullcalendar/timegrid";
 import frLocale from "@fullcalendar/core/locales/fr";
-import DatePicker from "./DatePicker";
 
 export default {
   components: {
     FullCalendar,
-    DatePicker,
   },
   setup() {
-    const { get } = useFetchData();
+    const { get } = useApi();
     const isOpen = ref(false);
     const date = ref(new Date());
     const vendors = ref([]);
@@ -84,9 +82,9 @@ export default {
       slotMinTime: "07:00:00",
       slotMaxTime: "19:00:00",
       expandRows: true,
-      eventClick: function (info) {
-        isOpen.value = true;
-      },
+      // eventClick: function (info) {
+      //   isOpen.value = true;
+      // },
     });
 
     return {
@@ -94,7 +92,6 @@ export default {
       calendarOptions,
       vendors,
       vendor,
-      date,
       calendarRef,
       vendorOptions: computed(() =>
         vendors.value.map((v) => ({ label: v.firstname, value: v.id }))
@@ -134,7 +131,6 @@ export default {
               @click="isOpen = false"
             />
           </div>
-          <DatePicker v-model="date" is-required @close="close" />
         </template>
       </UCard>
     </UModal>
@@ -142,5 +138,4 @@ export default {
 </template>
 
 <style scoped>
-/* Ajoutez des styles CSS pour votre composant ici */
 </style>
