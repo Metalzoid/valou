@@ -3,9 +3,21 @@ import nuxtStorage from "nuxt-storage";
 
 export default function useApi() {
   let tokenExpirationTimer = null;
+  const config = useRuntimeConfig();
+  const apiBase = config.public.apiBase;
+  const cookie = useCookie("jwt_token");
+
+  const verify_token = () => {
+    const cookie = useCookie("jwt_token");
+    if (cookie.value === undefined) {
+      return false;
+    }
+    return true;
+  };
+
   const login = async (email, password) => {
     try {
-      const response = await fetch("https://datescalendar.fr/api/v1/login", {
+      const response = await fetch(`${apiBase}/login`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -55,17 +67,18 @@ export default function useApi() {
       return { success: false, error };
     }
   };
+
   const logout = async () => {
     const cookie = useCookie("jwt_token");
 
     if (cookie.value != undefined) {
       try {
-        const response = await fetch("https://datescalendar.fr/api/v1/logout", {
+        const response = await fetch(`${apiBase}/logout`, {
           method: "DELETE",
           headers: {
             "Content-Type": "application/json",
             Accept: "application/json",
-            Authorization: cookie.value,
+            Authorization: `Bearer ${cookie.value}`,
           },
         });
 
@@ -88,6 +101,7 @@ export default function useApi() {
       }
     }
   };
+
   const register = async (
     email,
     password,
@@ -98,7 +112,7 @@ export default function useApi() {
   ) => {
     try {
       const config = useRuntimeConfig();
-      const response = await fetch("https://datescalendar.fr/api/v1/signup", {
+      const response = await fetch(`${apiBase}/signup`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -130,6 +144,64 @@ export default function useApi() {
     }
   };
 
+  const get = async (path) => {
+    if (verify_token()) {
+      try {
+        const response = await fetch(`${apiBase}/${path}`, {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+            Authorization: `Bearer ${cookie.value}`,
+          },
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          return { success: true, data };
+        }
+      } catch (err) {
+        return { success: false, err };
+      }
+    } else {
+      return {
+        success: false,
+        message: "You need to be authentificated to perform fetch.",
+      };
+    }
+  };
+
+  const post = async (path, query) => {
+    if (!verify_token()) {
+      return {
+        success: false,
+        message: "You need to be authenticated to perform this action.",
+      };
+    }
+
+    try {
+      const response = await fetch(`${apiBase}/${path}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+          Authorization: `Bearer ${cookie.value}`,
+        },
+        body: JSON.stringify(query),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        return { success: true, data };
+      } else {
+        return { success: false, data };
+      }
+    } catch (err) {
+      return { success: false, error: err.message };
+    }
+  };
+
   function setTokenExpirationTimer(tokenExpiry) {
     clearTokenExpirationTimer();
     tokenExpirationTimer = setTimeout(() => {
@@ -150,5 +222,7 @@ export default function useApi() {
     login,
     logout,
     register,
+    get,
+    post,
   };
 }

@@ -8,19 +8,21 @@ const scrollToTop = () => {
 </script>
 
 <template>
-  <div class="bg-zinc-100 text-black">
+  <div class="text-black">
+    <FlashMessage class="fixed top-12 left-0 right-0" style="z-index: 10000" />
     <Navbar />
     <NuxtPage />
     <UModals />
-  </div>
-  <div id="toTopButton" @click="scrollToTop()">
-    <font-awesome-icon :icon="['fas', 'arrow-up']" style="color: black" />
+    <div id="toTopButton" @click="scrollToTop()">
+      <font-awesome-icon :icon="['fas', 'arrow-up']" style="color: black" />
+    </div>
   </div>
 </template>
 
 <style lang="scss">
 body {
   margin: 0 auto;
+  background-color: rgb(244 244 245);
 }
 #toTopButton {
   z-index: 5;

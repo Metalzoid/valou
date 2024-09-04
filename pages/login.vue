@@ -4,6 +4,14 @@ import { useRouter } from "vue-router";
 
 const email = ref("");
 const password = ref("");
+const email2 = ref("");
+const password2 = ref("");
+const firstname = ref("");
+const lastname = ref("");
+const role = ref("");
+const company = ref("");
+const router = useRouter();
+
 const { login, logout, register } = useApi();
 
 const handleLogin = async () => {
@@ -19,8 +27,8 @@ const handleLogin = async () => {
 
 const handleRegister = async () => {
   const result = await register(
-    email.value,
-    password.value,
+    email2.value,
+    password2.value,
     firstname.value,
     lastname.value,
     role.value,
@@ -66,17 +74,17 @@ const handleRegister = async () => {
     <form @submit.prevent="handleRegister" class="flex flex-col w-6/12">
       <label for="email">Email: </label>
       <input
-        v-model="email"
+        v-model="email2"
         type="email"
-        id="email"
+        id="email2"
         placeholder="Your Email."
         required
       />
       <label for="password">Password: </label>
       <input
-        v-model="password"
+        v-model="password2"
         type="password"
-        id="password"
+        id="password2"
         placeholder="Your Password."
         required
       />

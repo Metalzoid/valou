@@ -1,0 +1,101 @@
+<script setup>
+const { post } = useApi();
+const { showFlashMessage } = useFlashMessage();
+
+const emit = defineEmits(["closeModal", "refetchEvents"]);
+
+const closeModal = () => {
+  emit("closeModal");
+};
+
+const refetchEvents = () => {
+  emit("refetchEvents");
+};
+
+const state = reactive({
+  start_date: undefined,
+  end_date: undefined,
+  available: false,
+  hourly_min: undefined,
+  hourly_max: undefined,
+});
+
+const form = ref();
+
+async function onSubmit(event) {
+  form.value.clear();
+  let formData = {
+    availability: {
+      start_date: state.start_date,
+      end_date: state.end_date,
+      available: state.available,
+    },
+  };
+
+  if (state.hourly_min && state.hourly_max) {
+    const min_hour = state.hourly_min.split(":")[0];
+    const min_minutes = state.hourly_min.split(":")[1];
+    const max_hour = state.hourly_max.split(":")[0];
+    const max_minutes = state.hourly_max.split(":")[1];
+
+    formData.time = {
+      min_hour: min_hour,
+      min_minutes: min_minutes,
+      max_hour: max_hour,
+      max_minutes: max_minutes,
+    };
+    console.log(formData);
+  }
+
+  const response = await post("availabilities", formData);
+
+  if (response.success) {
+    showFlashMessage(response.data.message, "success");
+    form.value.clear();
+    closeModal();
+    refetchEvents();
+  } else {
+    console.log(response.data);
+
+    const errors = Object.entries(response.data.errors).map(
+      ([path, message]) => ({
+        path: path == "start_time" ? "hourly_min" : path,
+        message: message[0],
+      })
+    );
+    form.value.setErrors(errors);
+    console.log(errors);
+    errors.forEach((err) => {
+      showFlashMessage(err.message, "danger", 4000);
+    });
+  }
+}
+</script>
+
+<template>
+  <UForm ref="form" :state="state" @submit="onSubmit">
+    <UFormGroup label="Date de début" name="start_date" class="mt-5">
+      <UInput v-model="state.start_date" type="datetime-local" required />
+    </UFormGroup>
+
+    <UFormGroup label="Date de fin" name="end_date" class="mt-3">
+      <UInput v-model="state.end_date" type="datetime-local" required />
+    </UFormGroup>
+
+    <UFormGroup label="Disponible ?" name="available" class="mt-3">
+      <UToggle v-model="state.available" />
+    </UFormGroup>
+
+    <h5 class="mt-3">Optionnel</h5>
+
+    <UFormGroup label="Horaire minimum" name="hourly_min" class="mt-5">
+      <UInput v-model="state.hourly_min" type="time" />
+    </UFormGroup>
+
+    <UFormGroup label="Horaire maximum" name="hourly_max" class="mt-5">
+      <UInput v-model="state.hourly_max" type="time" />
+    </UFormGroup>
+
+    <UButton type="submit" class="mt-5"> Submit </UButton>
+  </UForm>
+</template>
