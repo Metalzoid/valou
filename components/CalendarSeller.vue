@@ -13,11 +13,13 @@ export default {
     VueDatePicker,
   },
   setup() {
-    const { get } = useApi();
-    const isOpen = ref(false);
+    const { getData } = useApi();
     const user = ref(null);
     const date = ref();
+    const createAvailabilityModal = ref(false);
+    const infosAvailabilityModal = ref(false);
     const calendarRef = ref(null);
+    const availabilityInfos = ref(null);
     if (typeof window !== "undefined") {
       const userData = localStorage.getItem("user");
       if (userData) {
@@ -31,19 +33,57 @@ export default {
     }
 
     const getAvailabilities = async () => {
-      const response = await get(`availabilities`);
-      const dates = response.data.data.dates;
-      return dates.map((date) => ({
-        title: "Disponible",
-        start: new Date(date.from),
-        end: new Date(date.to),
-      }));
+      try {
+        const response = await getData(`availabilities`);
+        if (response.success) {
+          const dates = response.data.data.availabilities;
+          return dates.length > 0
+            ? dates.map((date) => ({
+                title: "Disponible",
+                start: new Date(date.start_date),
+                end: new Date(date.end_date),
+                id: date.id,
+              }))
+            : [];
+        } else {
+          return [];
+        }
+      } catch (error) {
+        if (error.response && error.response.status === 404) {
+          return [];
+        } else {
+          throw error;
+        }
+      }
+    };
+
+    const closeCreateAvailability = () => {
+      createAvailabilityModal.value = false;
+    };
+
+    const closeInfosAvailability = () => {
+      infosAvailabilityModal.value = false;
+    };
+
+    const openInfosModal = (info) => {
+      infosAvailabilityModal.value = true;
+      return {
+        id: info.event.id,
+        start: info.event.start.toLocaleString("fr-FR"),
+        end: info.event.end.toLocaleString("fr-FR"),
+      };
+    };
+
+    const refetchEvents = () => {
+      if (calendarRef.value) {
+        calendarRef.value.getApi().refetchEvents();
+      }
     };
 
     const calendarOptions = ref({
       plugins: [interactionPlugin, timeGridPlugin],
       initialView: "timeGridWeek",
-      height: 650,
+      height: 700,
       nowIndicator: true,
       locale: frLocale,
       headerToolbar: {
@@ -56,6 +96,7 @@ export default {
       slotMinTime: "07:00:00",
       slotMaxTime: "19:00:00",
       expandRows: true,
+      selectable: true,
       events: async (info, successCallback, failureCallback) => {
         try {
           const events = await getAvailabilities();
@@ -64,25 +105,21 @@ export default {
           failureCallback(error);
         }
       },
+      eventClick: function (info) {
+        availabilityInfos.value = openInfosModal(info);
+      },
     });
-
-    const closeModal = () => {
-      isOpen.value = false;
-    };
-
-    const refetchEvents = () => {
-      if (calendarRef.value) {
-        calendarRef.value.getApi().refetchEvents();
-      }
-    };
 
     return {
       calendarRef,
-      isOpen,
       calendarOptions,
       date,
-      closeModal,
       refetchEvents,
+      closeCreateAvailability,
+      createAvailabilityModal,
+      infosAvailabilityModal,
+      availabilityInfos,
+      closeInfosAvailability,
     };
   },
 };
@@ -91,46 +128,37 @@ export default {
 <template>
   <div>
     <div class="container mx-auto w-100 mt-5 items-center flex flex-col">
-      <h1 class="text-center text-5xl mb-6">Mes Disponibilitées</h1>
-      <UButton class="w-1/12" @click="isOpen = true"
-        >Créer une disponibilitée</UButton
+      <h1 class="text-center text-5xl mb-6">Mon calendrier</h1>
+      <UButton class="w-1/12" @click="createAvailabilityModal = true">
+        Créer une Disponibilité
+      </UButton>
+      <Modal
+        :isOpen="createAvailabilityModal"
+        :title="`Créer une disponibilité`"
+        @update:isOpen="(value) => (createAvailabilityModal = value)"
       >
+        <CreateAvailabilityForm
+          @closeModal="closeCreateAvailability()"
+          @refetchEvents="refetchEvents()"
+        />
+      </Modal>
+      <Modal
+        :isOpen="infosAvailabilityModal"
+        :title="`Infos disponibilité`"
+        @update:isOpen="(value) => (infosAvailabilityModal = value)"
+        @refetchEvents="refetchEvents()"
+      >
+        <InfosAvailability
+          :availabilityInfos="availabilityInfos"
+          @closeAvailability="closeInfosAvailability()"
+          @refetchEvents="refetchEvents()"
+      /></Modal>
       <FullCalendar
         :options="calendarOptions"
         ref="calendarRef"
         style="width: 60vw"
       />
     </div>
-    <UModal v-model="isOpen" prevent-close>
-      <UCard
-        :ui="{
-          ring: '',
-          divide: 'divide-y divide-gray-100 dark:divide-gray-800',
-        }"
-      >
-        <template #header>
-          <div class="flex items-center justify-between">
-            <h3
-              class="text-base font-semibold leading-6 text-gray-900 dark:text-white"
-            >
-              Créer une disponibilitée
-            </h3>
-            <UButton
-              color="gray"
-              variant="ghost"
-              icon="i-heroicons-x-mark-20-solid"
-              class="-my-1"
-              @click="closeModal()"
-            />
-          </div>
-
-          <CreateAvailabilityForm
-            @closeModal="closeModal()"
-            @refetchEvents="refetchEvents"
-          />
-        </template>
-      </UCard>
-    </UModal>
   </div>
 </template>
 

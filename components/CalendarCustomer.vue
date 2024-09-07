@@ -10,7 +10,7 @@ export default {
     FullCalendar,
   },
   setup() {
-    const { get } = useApi();
+    const { getData } = useApi();
     const isOpen = ref(false);
     const date = ref(new Date());
     const vendors = ref([]);
@@ -19,7 +19,7 @@ export default {
     const eventsLoaded = ref(false); // To prevent duplicate API calls
 
     const getVendors = async () => {
-      const response = await get("vendors");
+      const response = await getData("vendors");
       if (response) {
         vendors.value = response.data.vendors.map((vendor) => ({
           id: vendor.id,
@@ -33,7 +33,7 @@ export default {
 
     const getAvailabilities = async () => {
       if (!vendor.value) return [];
-      const response = await get(`availabilities?user=${vendor.value}`);
+      const response = await getData(`availabilities?user=${vendor.value}`);
       const dates = response.data.dates;
       return dates.map((date) => ({
         title: "Disponible",
@@ -137,5 +137,4 @@ export default {
   </div>
 </template>
 
-<style scoped>
-</style>
+<style scoped></style>

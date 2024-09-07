@@ -1,5 +1,5 @@
 <script setup>
-const { post } = useApi();
+const { postData } = useApi();
 const { showFlashMessage } = useFlashMessage();
 
 const emit = defineEmits(["closeModal", "refetchEvents"]);
@@ -22,7 +22,7 @@ const state = reactive({
 
 const form = ref();
 
-async function onSubmit(event) {
+const onSubmit = async () => {
   form.value.clear();
   let formData = {
     availability: {
@@ -47,7 +47,7 @@ async function onSubmit(event) {
     console.log(formData);
   }
 
-  const response = await post("availabilities", formData);
+  const response = await postData("availabilities", formData);
 
   if (response.success) {
     showFlashMessage(response.data.message, "success");
@@ -55,8 +55,6 @@ async function onSubmit(event) {
     closeModal();
     refetchEvents();
   } else {
-    console.log(response.data);
-
     const errors = Object.entries(response.data.errors).map(
       ([path, message]) => ({
         path: path == "start_time" ? "hourly_min" : path,
@@ -64,12 +62,11 @@ async function onSubmit(event) {
       })
     );
     form.value.setErrors(errors);
-    console.log(errors);
     errors.forEach((err) => {
       showFlashMessage(err.message, "danger", 4000);
     });
   }
-}
+};
 </script>
 
 <template>

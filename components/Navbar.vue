@@ -50,6 +50,13 @@ const scrollToTop = () => {
                   >Dashboard</NuxtLink
                 >
               </li>
+              <li>
+                <NuxtLink
+                  to="/login"
+                  :class="{ active: route.path.includes('/login') }"
+                  >Login</NuxtLink
+                >
+              </li>
             </ul>
           </div>
           <div id="mobileNavDiv">

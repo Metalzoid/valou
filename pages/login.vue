@@ -16,11 +16,21 @@ const { login, logout, register } = useApi();
 
 const handleLogin = async () => {
   const result = await login(email.value, password.value);
-  if (result.success) {
+  if (result && result.success) {
     if (typeof window !== "undefined") {
       const redirectPath = localStorage.getItem("redirectAfterLogin") || "/";
       localStorage.removeItem("redirectAfterLogin");
       return router.push(redirectPath);
+    }
+  }
+};
+
+const handleLogout = async () => {
+  const result = await logout();
+
+  if (result && result.success) {
+    if (typeof window !== "undefined") {
+      return router.push("/");
     }
   }
 };
@@ -64,7 +74,7 @@ const handleRegister = async () => {
       </button>
     </form>
     <button
-      @click="logout"
+      @click="handleLogout"
       class="mt-3 inline-block rounded bg-primary pb-2 pt-2.5 text-xs font-medium uppercase leading-normal text-white shadow-primary-3"
     >
       Logout

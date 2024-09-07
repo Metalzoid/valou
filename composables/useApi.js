@@ -7,6 +7,22 @@ export default function useApi() {
   const apiBase = config.public.apiBase;
   const cookie = useCookie("jwt_token");
 
+  const setTokenExpirationTimer = (tokenExpiry) => {
+    clearTokenExpirationTimer();
+    tokenExpirationTimer = setTimeout(() => {
+      const cookie = useCookie("jwt_token", {
+        expires: tokenExpiry,
+      });
+    }, tokenExpiry);
+  };
+
+  const clearTokenExpirationTimer = () => {
+    if (tokenExpirationTimer) {
+      clearTimeout(tokenExpirationTimer);
+      tokenExpirationTimer = null;
+    }
+  };
+
   const verify_token = () => {
     const cookie = useCookie("jwt_token");
     if (cookie.value === undefined) {
@@ -33,22 +49,20 @@ export default function useApi() {
             serialized_response.error ||
             "An unknown error occurred"
         );
-      } else {
-        console.log(serialized_response.message);
       }
 
       nuxtStorage.localStorage.setData(
         "user",
         serialized_response.data,
-        30,
+        60,
         "m"
       );
       const authHeader = response.headers.get("Authorization");
       if (authHeader) {
         const token = authHeader.split(" ")[1];
         const now = new Date();
-        const thirtyMinutes = 30 * 60 * 1000; // 30 minutes in milliseconds
-        const tokenExpiry = new Date(now.getTime() + thirtyMinutes);
+        const minutes = 60 * 60 * 1000; // 30 minutes in milliseconds
+        const tokenExpiry = new Date(now.getTime() + minutes);
         const cookie = useCookie("jwt_token", {
           expires: tokenExpiry,
           path: "/",
@@ -59,11 +73,9 @@ export default function useApi() {
         setTokenExpirationTimer(tokenExpiry);
         return { success: true, token };
       } else {
-        console.error("Authorization header is missing in the response.");
         return { success: false };
       }
     } catch (error) {
-      console.error("There was a problem with the login request:", error);
       return { success: false, error };
     }
   };
@@ -85,9 +97,7 @@ export default function useApi() {
         if (response.ok) {
           cookie.value = null;
           nuxtStorage.localStorage.removeItem("user");
-          console.log("Succesfully disconnected.");
-
-          // clearTokenExpirationTimer();
+          clearTokenExpirationTimer();
           return { success: true };
         } else {
           const errorData = await response.json();
@@ -144,7 +154,7 @@ export default function useApi() {
     }
   };
 
-  const get = async (path) => {
+  const getData = async (path) => {
     if (verify_token()) {
       try {
         const response = await fetch(`${apiBase}/${path}`, {
@@ -156,9 +166,11 @@ export default function useApi() {
           },
         });
 
+        const data = await response.json();
         if (response.ok) {
-          const data = await response.json();
           return { success: true, data };
+        } else {
+          return { success: false, data };
         }
       } catch (err) {
         return { success: false, err };
@@ -171,7 +183,7 @@ export default function useApi() {
     }
   };
 
-  const post = async (path, query) => {
+  const postData = async (path, query) => {
     if (!verify_token()) {
       return {
         success: false,
@@ -202,27 +214,42 @@ export default function useApi() {
     }
   };
 
-  function setTokenExpirationTimer(tokenExpiry) {
-    clearTokenExpirationTimer();
-    tokenExpirationTimer = setTimeout(() => {
-      const cookie = useCookie("jwt_token", {
-        expires: tokenExpiry,
-      });
-    }, tokenExpiry);
-  }
-
-  function clearTokenExpirationTimer() {
-    if (tokenExpirationTimer) {
-      clearTimeout(tokenExpirationTimer);
-      tokenExpirationTimer = null;
+  const deleteData = async (path) => {
+    if (!verify_token()) {
+      return {
+        success: false,
+        message: "You need to be authenticated to perform this action.",
+      };
     }
-  }
+
+    try {
+      const response = await fetch(`${apiBase}/${path}`, {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+          Authorization: `Bearer ${cookie.value}`,
+        },
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        return { success: true, data };
+      } else {
+        return { success: false, data };
+      }
+    } catch (err) {
+      return { success: false, error: err.message };
+    }
+  };
 
   return {
     login,
     logout,
     register,
-    get,
-    post,
+    getData,
+    postData,
+    deleteData,
   };
 }
