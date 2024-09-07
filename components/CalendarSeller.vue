@@ -13,13 +13,13 @@ export default {
     VueDatePicker,
   },
   setup() {
-    const { getData } = useApi();
+    const { getData, getUserByID } = useApi();
     const user = ref(null);
-    const date = ref();
     const createAvailabilityModal = ref(false);
-    const infosAvailabilityModal = ref(false);
+    const infosEventsModal = ref(false);
     const calendarRef = ref(null);
-    const availabilityInfos = ref(null);
+    const eventsInfos = ref(null);
+    const customer = ref(null);
     if (typeof window !== "undefined") {
       const userData = localStorage.getItem("user");
       if (userData) {
@@ -31,6 +31,25 @@ export default {
         }
       }
     }
+
+    const getUserInfos = async (id) => {
+      try {
+        const response = await getUserByID(id);
+        if (response.success) {
+          const user = response.data.data;
+          return {
+            user_id: user.id,
+            email: user.email,
+            firstname: user.firstname,
+            lastname: user.lastname,
+            company: user.company,
+            role: user.role,
+          };
+        }
+      } catch (error) {
+        console.log(error);
+      }
+    };
 
     const getAvailabilities = async () => {
       try {
@@ -57,21 +76,53 @@ export default {
       }
     };
 
+    const getAppointments = async () => {
+      try {
+        const response = await getData(`appointments`);
+
+        if (response.success) {
+          const datas = response.data.data;
+          if (datas.length > 0) {
+            return Promise.all(
+              datas
+                .filter((data) => data.status === "accepted")
+                .map(async (data) => ({
+                  id: data.id,
+                  title: "Rendez-vous",
+                  start: new Date(data.start_date),
+                  end: new Date(data.end_date),
+                  price: data.price,
+                  comment: data.comment,
+                  seller_comment: data.seller_comment,
+                  status: data.status,
+                  customer: await getUserInfos(data.customer_id),
+                }))
+            );
+          } else {
+            return [];
+          }
+        } else {
+          return [];
+        }
+      } catch (error) {
+        if (error.response && error.response.status === 404) {
+          return [];
+        } else {
+          throw error;
+        }
+      }
+    };
+
     const closeCreateAvailability = () => {
       createAvailabilityModal.value = false;
     };
 
-    const closeInfosAvailability = () => {
-      infosAvailabilityModal.value = false;
+    const closeInfosEvents = () => {
+      infosEventsModal.value = false;
     };
 
-    const openInfosModal = (info) => {
-      infosAvailabilityModal.value = true;
-      return {
-        id: info.event.id,
-        start: info.event.start.toLocaleString("fr-FR"),
-        end: info.event.end.toLocaleString("fr-FR"),
-      };
+    const openInfosModal = () => {
+      infosEventsModal.value = true;
     };
 
     const refetchEvents = () => {
@@ -99,27 +150,30 @@ export default {
       selectable: true,
       events: async (info, successCallback, failureCallback) => {
         try {
-          const events = await getAvailabilities();
-          successCallback(events);
+          const availabilities = await getAvailabilities();
+          const appointments = await getAppointments();
+          const data = [...availabilities, ...appointments];
+
+          successCallback(data);
         } catch (error) {
           failureCallback(error);
         }
       },
       eventClick: function (info) {
-        availabilityInfos.value = openInfosModal(info);
+        openInfosModal();
+        eventsInfos.value = info;
       },
     });
 
     return {
       calendarRef,
       calendarOptions,
-      date,
       refetchEvents,
       closeCreateAvailability,
       createAvailabilityModal,
-      infosAvailabilityModal,
-      availabilityInfos,
-      closeInfosAvailability,
+      infosEventsModal,
+      eventsInfos,
+      closeInfosEvents,
     };
   },
 };
@@ -138,20 +192,24 @@ export default {
         @update:isOpen="(value) => (createAvailabilityModal = value)"
       >
         <CreateAvailabilityForm
-          @closeModal="closeCreateAvailability()"
-          @refetchEvents="refetchEvents()"
+          @closeModal="closeCreateAvailability"
+          @refetchEvents="refetchEvents"
         />
       </Modal>
       <Modal
-        :isOpen="infosAvailabilityModal"
-        :title="`Infos disponibilité`"
-        @update:isOpen="(value) => (infosAvailabilityModal = value)"
-        @refetchEvents="refetchEvents()"
+        :isOpen="infosEventsModal"
+        :title="
+          eventsInfos?.event?.extendedProps?.status
+            ? `Votre rendez-vous avec ${eventsInfos.event.extendedProps.customer.firstname} ${eventsInfos.event.extendedProps.customer.lastname}`
+            : 'Votre disponibilité'
+        "
+        @update:isOpen="(value) => (infosEventsModal = value)"
+        @refetchEvents="refetchEvents"
       >
-        <InfosAvailability
-          :availabilityInfos="availabilityInfos"
-          @closeAvailability="closeInfosAvailability()"
-          @refetchEvents="refetchEvents()"
+        <InfosEvents
+          :eventsInfos="eventsInfos"
+          @closeEvents="closeInfosEvents"
+          @refetchEvents="refetchEvents"
       /></Modal>
       <FullCalendar
         :options="calendarOptions"

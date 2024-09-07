@@ -214,6 +214,37 @@ export default function useApi() {
     }
   };
 
+  const updateData = async (path, query) => {
+    if (!verify_token()) {
+      return {
+        success: false,
+        message: "You need to be authenticated to perform this action.",
+      };
+    }
+
+    try {
+      const response = await fetch(`${apiBase}/${path}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+          Authorization: `Bearer ${cookie.value}`,
+        },
+        body: JSON.stringify(query),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        return { success: true, data };
+      } else {
+        return { success: false, data };
+      }
+    } catch (err) {
+      return { success: false, error: err.message };
+    }
+  };
+
   const deleteData = async (path) => {
     if (!verify_token()) {
       return {
@@ -244,12 +275,43 @@ export default function useApi() {
     }
   };
 
+  const getUserByID = async (id) => {
+    if (!verify_token()) {
+      return {
+        success: false,
+        message: "You need to be authenticated to perform this action.",
+      };
+    }
+    try {
+      const response = await fetch(`${apiBase}/user_search?user_id=${id}`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+          Authorization: `Bearer ${cookie.value}`,
+        },
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        return { success: true, data };
+      } else {
+        return { success: false, data };
+      }
+    } catch (err) {
+      return { success: false, error: err.message };
+    }
+  };
+
   return {
     login,
     logout,
     register,
     getData,
     postData,
+    updateData,
     deleteData,
+    getUserByID,
   };
 }
