@@ -1,6 +1,8 @@
 <script setup>
 const route = useRoute();
+
 let mobileChecked = ref(false);
+
 function toggleNavMobile() {
   if (window.innerWidth < 855) {
     mobileChecked.value = false;
@@ -12,6 +14,12 @@ const scrollToTop = () => {
     behavior: "smooth",
   });
 };
+
+const userStore = useUserStore();
+
+onMounted(() => {
+  userStore.loadUserFromSession();
+});
 </script>
 
 <style>
@@ -23,9 +31,13 @@ const scrollToTop = () => {
     <div>
       <header>
         <div id="navigation">
-          <NuxtLink to="/" @click="scrollToTop()"
-            ><img class="logo" src="/img/logo.png" alt="logo"
+          <NuxtLink to="/" @click="scrollToTop()" class="logo"
+            ><img src="/img/logo.png" alt="logo"
           /></NuxtLink>
+          <div class="profil" v-if="userStore.currentUser">
+            Bienvenue {{ userStore.currentUser.firstname }} !
+          </div>
+
           <div id="nav">
             <ul class="nav">
               <li>
@@ -54,7 +66,7 @@ const scrollToTop = () => {
                 <NuxtLink
                   to="/login"
                   :class="{ active: route.path.includes('/login') }"
-                  >Login</NuxtLink
+                  >{{ userStore.currentUser ? "Logout" : "Login" }}</NuxtLink
                 >
               </li>
             </ul>
@@ -93,7 +105,7 @@ const scrollToTop = () => {
   </div>
 </template>
 
-<style lang="scss">
+<style lang="scss" scoped>
 ::-webkit-scrollbar {
   width: 8px;
 }
@@ -110,16 +122,38 @@ const scrollToTop = () => {
 }
 
 #navigation {
-  height: 72px;
+  height: 100vh;
+  width: 15vw;
   background-color: white;
   display: flex;
-  align-items: center;
+  position: fixed;
+  top: 0;
+  left: 0;
+  flex-direction: column;
   justify-content: space-between;
-  flex-direction: row;
   align-items: center;
   box-shadow: 0px 15px 20px -12px rgba(67, 54, 35, 0.08);
-  width: 100%;
   padding: 0 1vw;
+
+  .profil {
+    flex-grow: 1;
+  }
+
+  #nav {
+    flex-grow: 4;
+    align-items: start;
+    margin-top: 5rem;
+    .nav {
+      display: flex;
+      flex-direction: column;
+      gap: 3rem;
+    }
+  }
+
+  .logo {
+    width: 200px;
+    margin: 1rem 0 2rem 0;
+  }
 
   a {
     text-decoration: none;
@@ -134,11 +168,6 @@ const scrollToTop = () => {
   input {
     display: none;
   }
-}
-
-.logo {
-  width: 200px;
-  margin-top: 3px;
 }
 
 .hireMeNav {

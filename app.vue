@@ -1,16 +1,18 @@
 <script setup>
+
 const scrollToTop = () => {
   window.scrollTo({
     top: 0,
     behavior: "smooth",
   });
 };
+
 </script>
 
 <template>
   <div class="text-black">
     <FlashMessage class="fixed top-12 left-0 right-0" style="z-index: 10000" />
-    <Navbar />
+    <Navbar :user="user" />
     <NuxtPage />
     <UModals />
     <div id="toTopButton" @click="scrollToTop()">

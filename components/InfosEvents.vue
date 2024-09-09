@@ -1,5 +1,5 @@
 <script setup>
-const { deleteData, updateData } = useApi();
+const { deleteData, updateData, getData } = useApi();
 
 const props = defineProps({
   eventsInfos: Object,
@@ -17,6 +17,7 @@ const event = ref({
   price: null,
   comment: null,
   seller_comment: null,
+  services: null,
 });
 
 const statusOptions = [
@@ -68,7 +69,6 @@ const updateAppointment = async () => {
       `appointments/${event.value.id}`,
       appointment
     );
-    console.log(response);
   } catch (error) {
     console.log(error);
   }
@@ -88,6 +88,7 @@ watch(
         price: newVal.event.extendedProps.price,
         comment: newVal.event.extendedProps.comment,
         seller_comment: newVal.event.extendedProps.seller_comment,
+        services: newVal.event.extendedProps.services,
       };
     }
   },
@@ -105,6 +106,12 @@ watch(
   <p class="my-1" v-if="event.seller_comment">
     Votre commentaire: {{ event.seller_comment }}
   </p>
+  <h1 v-if="event.services">Prestations:</h1>
+  <ul v-for="service in event.services">
+    <li>
+      - {{ service.title }} • {{ service.time }} minutes - {{ service.price }} €
+    </li>
+  </ul>
   <USelect
     class="my-1"
     v-model="event.status"

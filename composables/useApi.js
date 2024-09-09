@@ -1,11 +1,11 @@
 import { useCookie } from "#app";
-import nuxtStorage from "nuxt-storage";
 
 export default function useApi() {
   let tokenExpirationTimer = null;
   const config = useRuntimeConfig();
   const apiBase = config.public.apiBase;
   const cookie = useCookie("jwt_token");
+  const userStore = useUserStore();
 
   const setTokenExpirationTimer = (tokenExpiry) => {
     clearTokenExpirationTimer();
@@ -51,12 +51,14 @@ export default function useApi() {
         );
       }
 
-      nuxtStorage.localStorage.setData(
+      sessionStorage.setItem(
         "user",
-        serialized_response.data,
+        JSON.stringify(serialized_response.data.user),
         60,
         "m"
       );
+      userStore.setUser(serialized_response.data.user);
+
       const authHeader = response.headers.get("Authorization");
       if (authHeader) {
         const token = authHeader.split(" ")[1];
@@ -96,7 +98,8 @@ export default function useApi() {
 
         if (response.ok) {
           cookie.value = null;
-          nuxtStorage.localStorage.removeItem("user");
+          sessionStorage.removeItem("user");
+          userStore.setUser(null);
           clearTokenExpirationTimer();
           return { success: true };
         } else {

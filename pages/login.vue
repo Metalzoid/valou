@@ -2,6 +2,7 @@
 import { ref } from "vue";
 import { useRouter } from "vue-router";
 
+const userStore = useUserStore();
 const email = ref("");
 const password = ref("");
 const email2 = ref("");
@@ -16,10 +17,11 @@ const { login, logout, register } = useApi();
 
 const handleLogin = async () => {
   const result = await login(email.value, password.value);
+
   if (result && result.success) {
     if (typeof window !== "undefined") {
-      const redirectPath = localStorage.getItem("redirectAfterLogin") || "/";
-      localStorage.removeItem("redirectAfterLogin");
+      const redirectPath = sessionStorage.getItem("redirectAfterLogin") || "/";
+      sessionStorage.removeItem("redirectAfterLogin");
       return router.push(redirectPath);
     }
   }
@@ -36,7 +38,7 @@ const handleLogout = async () => {
 };
 
 const handleRegister = async () => {
-  const result = await register(
+  await register(
     email2.value,
     password2.value,
     firstname.value,

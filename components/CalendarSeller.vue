@@ -19,7 +19,6 @@ export default {
     const infosEventsModal = ref(false);
     const calendarRef = ref(null);
     const eventsInfos = ref(null);
-    const customer = ref(null);
     if (typeof window !== "undefined") {
       const userData = localStorage.getItem("user");
       if (userData) {
@@ -85,17 +84,18 @@ export default {
           if (datas.length > 0) {
             return Promise.all(
               datas
-                .filter((data) => data.status === "accepted")
+                .filter((data) => data.appointment.status === "accepted")
                 .map(async (data) => ({
-                  id: data.id,
+                  id: data.appointment.id,
                   title: "Rendez-vous",
-                  start: new Date(data.start_date),
-                  end: new Date(data.end_date),
-                  price: data.price,
-                  comment: data.comment,
-                  seller_comment: data.seller_comment,
-                  status: data.status,
-                  customer: await getUserInfos(data.customer_id),
+                  start: new Date(data.appointment.start_date),
+                  end: new Date(data.appointment.end_date),
+                  price: data.appointment.price,
+                  comment: data.appointment.comment,
+                  seller_comment: data.appointment.seller_comment,
+                  status: data.appointment.status,
+                  customer: await getUserInfos(data.appointment.customer_id),
+                  services: data.services,
                 }))
             );
           } else {
@@ -153,7 +153,6 @@ export default {
           const availabilities = await getAvailabilities();
           const appointments = await getAppointments();
           const data = [...availabilities, ...appointments];
-
           successCallback(data);
         } catch (error) {
           failureCallback(error);

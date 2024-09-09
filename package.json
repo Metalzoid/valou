@@ -22,6 +22,7 @@
     "@fullcalendar/timegrid": "^6.1.15",
     "@fullcalendar/vue3": "^6.1.15",
     "@nuxt/ui": "^2.17.0",
+    "@pinia/nuxt": "^0.5.4",
     "@types/lodash": "^4.17.7",
     "@vuepic/vue-datepicker": "^9.0.2",
     "date-fns": "^3.6.0",

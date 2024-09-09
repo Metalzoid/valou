@@ -1,13 +1,13 @@
 export default defineNuxtRouteMiddleware((to, from) => {
   if (typeof window !== "undefined") {
     const cookie = useCookie("jwt_token");
-    const loggedIn = !!localStorage.getItem("user");
+    const loggedIn = !!sessionStorage.getItem("user");
 
     if (cookie.value === undefined) {
       if (loggedIn) {
-        localStorage.removeItem("user");
+        sessionStorage.removeItem("user");
       }
-      localStorage.setItem("redirectAfterLogin", to.fullPath);
+      sessionStorage.setItem("redirectAfterLogin", to.fullPath);
       return navigateTo("/login");
     }
   }
