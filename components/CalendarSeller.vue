@@ -136,17 +136,33 @@ export default {
       }
     };
 
+    const setupTimeGridDay = () => {
+      if (window.innerWidth > 1150) {
+        return "timeGridWeek";
+      } else if (window.innerWidth > 850) {
+        return "fiveDaysTimeGrid";
+      } else {
+        return "timeGridDay";
+      }
+    };
+
     const calendarOptions = ref({
       plugins: [interactionPlugin, timeGridPlugin],
-      initialView: "timeGridWeek",
+      initialView: setupTimeGridDay(),
+      views: {
+        fiveDaysTimeGrid: {
+          type: "timeGrid",
+          duration: { days: 5 },
+          buttonText: "5 jours",
+        },
+      },
       height: "auto",
       nowIndicator: true,
       locale: frLocale,
       headerToolbar: {
-        left: "prev,next",
-        right: "today,timeGridWeek,timeGridDay",
+        left: "prev,today,next",
+        right: "timeGridWeek,fiveDaysTimeGrid,timeGridDay",
       },
-      titleFormat: { year: "numeric", month: "long", day: "numeric" },
       allDaySlot: false,
       slotMinTime: "07:00:00",
       slotMaxTime: "20:00:00",
@@ -175,6 +191,32 @@ export default {
         };
         createAvailabilityModal.value = true;
       },
+      windowResize: () => {
+        updateWidth();
+      },
+    });
+
+    const updateWidth = () => {
+      const calendarHeader = document.querySelector(".fc-header-toolbar");
+      const calendarApi = calendarRef.value.getApi();
+      if (window.innerWidth < 651) {
+        calendarHeader.style.flexWrap = "wrap";
+        calendarHeader.style.justifyContent = "center";
+        calendarHeader.style.gap = "5px";
+        calendarApi.changeView("timeGridDay");
+      } else if (window.innerWidth < 850) {
+        calendarApi.changeView("fiveDaysTimeGrid");
+      } else if (window.innerWidth > 1150) {
+        calendarApi.changeView("timeGridWeek");
+      } else {
+        calendarHeader.style.flexWrap = "nowrap";
+        calendarHeader.style.justifyContent = "space-between";
+        calendarApi.changeView("timeGridWeek");
+      }
+    };
+
+    onMounted(() => {
+      updateWidth();
     });
 
     return {
@@ -232,7 +274,7 @@ export default {
     <FullCalendar
       :options="calendarOptions"
       ref="calendarRef"
-      style="width: 60vw"
+      style="width: 75vw"
     />
   </div>
 </template>

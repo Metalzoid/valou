@@ -12,7 +12,7 @@ const role = ref("customer");
 const company = ref("");
 const router = useRouter();
 
-const { login, logout, register } = useApi();
+const { login, register } = useApi();
 
 const handleLogin = async () => {
   const result = await login(email.value, password.value);
@@ -61,7 +61,7 @@ const handleRegister = async () => {
         />
         <button
           type="submit"
-          class="mt-3 inline-block rounded bg-primary pb-2 pt-2.5 text-xs font-medium uppercase leading-normal text-white shadow-primary-3 w-1/12"
+          class="mt-3 inline-block rounded bg-primary pb-2 pt-2.5 text-xs font-medium uppercase leading-normal text-white shadow-primary-3 w-auto"
         >
           Login
         </button>
@@ -87,7 +87,7 @@ const handleRegister = async () => {
         />
         <button
           type="submit"
-          class="mt-3 inline-block rounded bg-primary pb-2 pt-2.5 text-xs font-medium uppercase leading-normal text-white shadow-primary-3 w-1/12"
+          class="mt-3 inline-block rounded bg-primary pb-2 pt-2.5 text-xs font-medium uppercase leading-normal text-white shadow-primary-3 w-auto"
         >
           Register
         </button>

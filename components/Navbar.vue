@@ -7,11 +7,9 @@ const router = useRouter();
 
 let mobileChecked = ref(false);
 
-function toggleNavMobile() {
-  if (window.innerWidth < 855) {
-    mobileChecked.value = false;
-  }
-}
+const toggleNavMobile = () => {
+  mobileChecked.value = false;
+};
 
 const scrollToTop = () => {
   window.scrollTo({
@@ -20,6 +18,12 @@ const scrollToTop = () => {
   });
 };
 
+const handleNavClick = () => {
+  if (window.innerWidth < 855) {
+    toggleNavMobile();
+    scrollToTop();
+  }
+};
 const userStore = useUserStore();
 
 const handleLogout = async () => {
@@ -27,6 +31,7 @@ const handleLogout = async () => {
 
   if (result && result.success) {
     if (typeof window !== "undefined") {
+      handleNavClick();
       return router.push("/");
     }
   }
@@ -35,11 +40,20 @@ const handleLogout = async () => {
 onMounted(() => {
   userStore.loadUserFromSession();
 });
-</script>
 
-<style>
-@import url("https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;700&display=swap");
-</style>
+watch(
+  () => mobileChecked.value,
+  (newVal) => {
+    const body = document.querySelector("body");
+
+    if (newVal) {
+      body.style.margin = "12vh 0 0 20vw";
+    } else {
+      body.style.margin = "12vh 0 0 0";
+    }
+  }
+);
+</script>
 
 <template>
   <div @wheel="toggleNavMobile()" @touchmove="toggleNavMobile()">
@@ -49,11 +63,10 @@ onMounted(() => {
           <NuxtLink to="/" @click="scrollToTop()" class="logo"
             ><img src="/img/logo.png" alt="logo"
           /></NuxtLink>
-          <div class="profil" v-if="userStore.currentUser">
-            Bienvenue {{ userStore.currentUser.firstname }} !
-          </div>
-
           <div id="nav">
+            <div class="profil" v-if="userStore.currentUser">
+              Bienvenue {{ userStore.currentUser.firstname }} !
+            </div>
             <ul class="nav">
               <li>
                 <NuxtLink
@@ -77,6 +90,8 @@ onMounted(() => {
                   >Dashboard</NuxtLink
                 >
               </li>
+            </ul>
+            <div class="w-full text-center">
               <ul>
                 <li>
                   <NuxtLink
@@ -96,7 +111,7 @@ onMounted(() => {
                   </NuxtLink>
                 </li>
               </ul>
-            </ul>
+            </div>
           </div>
           <div id="mobileNavDiv">
             <input type="checkbox" v-model="mobileChecked" id="mobileNavPaa" />
@@ -106,24 +121,61 @@ onMounted(() => {
               <div></div>
             </label>
             <nav id="mobileNav">
-              <ul class="navMobile">
-                <li>
-                  <NuxtLink
-                    to="/"
-                    class="active"
-                    @click="toggleNavMobile(), scrollToTop()"
-                    >Accueil</NuxtLink
-                  >
-                </li>
-                <li>
-                  <NuxtLink to="/" @click="toggleNavMobile()"
-                    >Projets Réalisés</NuxtLink
-                  >
-                </li>
-                <li>
-                  <NuxtLink to="/" @click="toggleNavMobile()">Contact</NuxtLink>
-                </li>
-              </ul>
+              <div class="navMobile">
+                <div class="profil" v-if="userStore.currentUser">
+                  Bienvenue {{ userStore.currentUser.firstname }} !
+                </div>
+                <div>
+                  <ul>
+                    <li>
+                      <NuxtLink
+                        to="/"
+                        @click="handleNavClick"
+                        :class="{ active: route.path === '/' }"
+                        >Accueil</NuxtLink
+                      >
+                    </li>
+                    <li>
+                      <NuxtLink
+                        to="/calendar"
+                        @click="handleNavClick"
+                        :class="{ active: route.path.includes('/calendar') }"
+                        >Calendrier</NuxtLink
+                      >
+                    </li>
+                    <li>
+                      <NuxtLink
+                        to="/dashboard"
+                        @click="handleNavClick"
+                        :class="{ active: route.path.includes('/dashboard') }"
+                        >Dashboard</NuxtLink
+                      >
+                    </li>
+                  </ul>
+                </div>
+                <div>
+                  <ul>
+                    <li>
+                      <NuxtLink
+                        to="/login"
+                        @click="handleNavClick"
+                        :class="{ active: route.path.includes('/login') }"
+                        v-if="!userStore.currentUser"
+                        >Se connecter</NuxtLink
+                      >
+                    </li>
+                    <li>
+                      <NuxtLink
+                        @click="handleLogout"
+                        style="cursor: pointer"
+                        v-if="userStore.currentUser"
+                      >
+                        Logout
+                      </NuxtLink>
+                    </li>
+                  </ul>
+                </div>
+              </div>
             </nav>
           </div>
         </div>
@@ -154,6 +206,7 @@ onMounted(() => {
   background-color: white;
   display: flex;
   position: fixed;
+  z-index: 999;
   top: 0;
   left: 0;
   flex-direction: column;
@@ -163,22 +216,30 @@ onMounted(() => {
   padding: 0 1vw;
 
   .profil {
-    flex-grow: 1;
+    flex-grow: 0.3;
+    text-align: center;
+    width: 100%;
   }
 
   #nav {
     flex-grow: 4;
     align-items: start;
-    margin-top: 5rem;
+    justify-content: space-between;
+    margin: 2rem auto;
+    width: 100%;
     .nav {
       display: flex;
+      align-items: center;
       flex-direction: column;
+      justify-content: flex-start;
       gap: 3rem;
+      width: 100%;
     }
   }
 
   .logo {
-    width: 200px;
+    width: auto;
+    max-width: 40vh;
     margin: 1rem 0 2rem 0;
   }
 
@@ -214,11 +275,10 @@ onMounted(() => {
 
 #nav {
   display: flex;
-  flex-direction: row;
+  flex-direction: column;
   list-style: none;
   justify-content: center;
   align-items: center;
-  width: 100%;
   a {
     text-decoration: none;
     font-size: x-large;
@@ -240,16 +300,17 @@ onMounted(() => {
   .active {
     color: rgba(237, 104, 46, 1);
   }
-}
 
-.nav {
-  display: flex;
-  align-items: center;
-  padding-left: 0;
-  margin: 0 10px;
-  gap: 7px;
-  li {
+  .nav {
     display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    padding-left: 0;
+    gap: 7px;
+    li {
+      display: flex;
+    }
   }
 }
 
@@ -271,14 +332,17 @@ onMounted(() => {
 
 @media only screen and (max-width: 855px) {
   #navigation {
-    width: 100%;
+    width: 100vw;
+    height: 12vh;
     margin: 0;
     justify-content: space-between;
     align-items: center;
 
     .logo {
       width: 40vw;
-      margin-left: 5vw;
+      display: flex;
+      justify-content: center;
+      align-items: center;
       min-width: 150px;
     }
     #nav {
@@ -291,6 +355,7 @@ onMounted(() => {
       height: 100%;
       .email {
         text-decoration: underline;
+        text-align: center;
       }
     }
   }
@@ -299,28 +364,42 @@ onMounted(() => {
     cursor: pointer;
   }
 
+  .profil {
+    flex-grow: initial !important;
+    text-align: center;
+  }
+
   #mobileNav {
-    background: white;
-    width: 100%;
+    background: rgb(255, 255, 255);
+    width: 20vw;
+    height: 100%;
     position: fixed;
-    right: 0;
+    left: 0;
     transition-timing-function: cubic-bezier(10, 2, 3, 1);
-    transform: translateY(-50rem);
-    top: 72px;
+    transform: translateX(-35vw);
+    top: 0;
     z-index: -1;
     transition: 0.5s;
     display: flex;
     flex-direction: column;
-    padding-bottom: 25px;
     .navMobile {
       display: flex;
+      height: 100%;
       flex-direction: column;
       align-items: center;
-      padding-left: 0;
-      margin: 0 10px;
+      justify-content: space-between;
+      margin: 15vh auto auto auto;
       gap: 7px;
-      li {
+      ul {
         display: flex;
+        flex-direction: column;
+        gap: 1rem;
+        width: 100%;
+        justify-content: center;
+        align-items: center;
+        li {
+          display: flex;
+        }
       }
       a {
         font-family: Plus Jakarta Sans;
@@ -331,89 +410,20 @@ onMounted(() => {
         text-align: center;
         color: rgba(38, 38, 38, 1);
       }
-    }
-
-    #profilMobile {
-      display: flex;
-      flex-wrap: wrap;
-      width: 100%;
-      justify-content: center;
-      margin-top: 15px;
-      gap: 16px;
-      #photoProfilMobile {
-        background: linear-gradient(180deg, #ff6f47 0%, #ff9447 100%);
-        display: flex;
-        width: 132px;
-        height: 132px;
-        min-width: 132px;
-        border-radius: 100px;
-        img {
-          width: 100%;
-          border-radius: 100px;
-        }
-      }
-      #profilInfosMobile {
-        display: flex;
-        flex-direction: column;
-        #infosMobile {
-          margin-top: -10px;
-          display: flex;
-          flex-direction: column;
-          .email {
-            font-family: Plus Jakarta Sans;
-            font-size: 18px;
-            font-weight: 600;
-            line-height: 28px;
-            letter-spacing: 0em;
-            text-align: center;
-            color: black;
-            text-wrap: wrap;
-          }
-          a {
-            text-decoration: underline;
-            text-decoration-color: black;
-            text-underline-offset: 3.5px;
-            text-wrap: wrap;
-          }
-          .localisation {
-            font-family: Plus Jakarta Sans;
-            font-size: 18px;
-            font-weight: 400;
-            line-height: 28px;
-            letter-spacing: 0em;
-            margin-top: -15px;
-          }
-        }
-        #socialMobile {
-          margin-top: -3px;
-          display: flex;
-          a {
-            flex: 1 1 auto;
-          }
-        }
-      }
-    }
-
-    @media only screen and (max-width: 366px) {
-      #socialMobile {
-        display: flex;
-        width: 100%;
-        justify-content: center;
-        gap: 10px;
+      .active {
+        color: rgba(237, 104, 46, 1);
       }
     }
   }
+
   /* Links Navigations */
   .nav {
-    flex-direction: column;
-    align-items: flex-start;
     li {
       font-family: Plus Jakarta Sans;
       font-size: 18px;
       font-weight: 400;
       line-height: 28px;
       letter-spacing: 0em;
-      text-align: center;
       a {
         color: rgba(38, 38, 38, 1);
       }
@@ -457,10 +467,6 @@ onMounted(() => {
         transform: translateY(-15px) rotate(-45deg);
       }
     }
-  }
-
-  #toTopButton {
-    display: none;
   }
 }
 </style>
