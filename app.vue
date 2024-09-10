@@ -1,12 +1,10 @@
 <script setup>
-
 const scrollToTop = () => {
   window.scrollTo({
     top: 0,
     behavior: "smooth",
   });
 };
-
 </script>
 
 <template>
@@ -23,7 +21,7 @@ const scrollToTop = () => {
 
 <style lang="scss">
 body {
-  margin: 0 auto;
+  margin: 0 auto 0 15vw;
   background-color: rgb(244 244 245);
 }
 #toTopButton {

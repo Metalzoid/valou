@@ -1,5 +1,9 @@
 <script setup>
+import { useRouter } from "vue-router";
+
+const { logout } = useApi();
 const route = useRoute();
+const router = useRouter();
 
 let mobileChecked = ref(false);
 
@@ -8,6 +12,7 @@ function toggleNavMobile() {
     mobileChecked.value = false;
   }
 }
+
 const scrollToTop = () => {
   window.scrollTo({
     top: 0,
@@ -16,6 +21,16 @@ const scrollToTop = () => {
 };
 
 const userStore = useUserStore();
+
+const handleLogout = async () => {
+  const result = await logout();
+
+  if (result && result.success) {
+    if (typeof window !== "undefined") {
+      return router.push("/");
+    }
+  }
+};
 
 onMounted(() => {
   userStore.loadUserFromSession();
@@ -62,13 +77,25 @@ onMounted(() => {
                   >Dashboard</NuxtLink
                 >
               </li>
-              <li>
-                <NuxtLink
-                  to="/login"
-                  :class="{ active: route.path.includes('/login') }"
-                  >{{ userStore.currentUser ? "Logout" : "Login" }}</NuxtLink
-                >
-              </li>
+              <ul>
+                <li>
+                  <NuxtLink
+                    to="/login"
+                    :class="{ active: route.path.includes('/login') }"
+                    v-if="!userStore.currentUser"
+                    >Se connecter</NuxtLink
+                  >
+                </li>
+                <li>
+                  <NuxtLink
+                    @click="handleLogout"
+                    style="cursor: pointer"
+                    v-if="userStore.currentUser"
+                  >
+                    Logout
+                  </NuxtLink>
+                </li>
+              </ul>
             </ul>
           </div>
           <div id="mobileNavDiv">

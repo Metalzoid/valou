@@ -4,6 +4,12 @@ const { showFlashMessage } = useFlashMessage();
 
 const emit = defineEmits(["closeModal", "refetchEvents"]);
 
+const props = defineProps({
+  selectedDates: Object,
+});
+
+const toggleHourly = ref(false);
+
 const closeModal = () => {
   emit("closeModal");
 };
@@ -15,12 +21,23 @@ const refetchEvents = () => {
 const state = reactive({
   start_date: undefined,
   end_date: undefined,
-  available: false,
+  available: true,
   hourly_min: undefined,
   hourly_max: undefined,
 });
 
 const form = ref();
+
+watch(
+  () => props.selectedDates,
+  (newVal) => {
+    if (newVal) {
+      state.start_date = newVal.start.slice(0, 16);
+      state.end_date = newVal.end.slice(0, 16);
+    }
+  },
+  { immediate: true }
+);
 
 const onSubmit = async () => {
   form.value.clear();
@@ -44,7 +61,6 @@ const onSubmit = async () => {
       max_hour: max_hour,
       max_minutes: max_minutes,
     };
-    console.log(formData);
   }
 
   const response = await postData("availabilities", formData);
@@ -83,15 +99,19 @@ const onSubmit = async () => {
       <UToggle v-model="state.available" />
     </UFormGroup>
 
-    <h5 class="mt-3">Optionnel</h5>
-
-    <UFormGroup label="Horaire minimum" name="hourly_min" class="mt-5">
-      <UInput v-model="state.hourly_min" type="time" />
+    <UFormGroup label="Optionnel" name="available" class="mt-3">
+      <UToggle v-model="toggleHourly" />
     </UFormGroup>
 
-    <UFormGroup label="Horaire maximum" name="hourly_max" class="mt-5">
-      <UInput v-model="state.hourly_max" type="time" />
-    </UFormGroup>
+    <div v-if="toggleHourly">
+      <UFormGroup label="Horaire minimum" name="hourly_min" class="mt-5">
+        <UInput v-model="state.hourly_min" type="time" />
+      </UFormGroup>
+
+      <UFormGroup label="Horaire maximum" name="hourly_max" class="mt-5">
+        <UInput v-model="state.hourly_max" type="time" />
+      </UFormGroup>
+    </div>
 
     <UButton type="submit" class="mt-5"> Submit </UButton>
   </UForm>

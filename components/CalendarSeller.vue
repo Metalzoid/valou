@@ -13,12 +13,14 @@ export default {
     VueDatePicker,
   },
   setup() {
-    const { getData, getUserByID } = useApi();
+    const { getData, getUserByID, updateData } = useApi();
     const user = ref(null);
     const createAvailabilityModal = ref(false);
     const infosEventsModal = ref(false);
     const calendarRef = ref(null);
     const eventsInfos = ref(null);
+    const selectedDates = ref(null);
+
     if (typeof window !== "undefined") {
       const userData = localStorage.getItem("user");
       if (userData) {
@@ -57,9 +59,11 @@ export default {
           const dates = response.data.data.availabilities;
           return dates.length > 0
             ? dates.map((date) => ({
+                type: "availability",
                 title: "Disponible",
                 start: new Date(date.start_date),
                 end: new Date(date.end_date),
+                available: date.available,
                 id: date.id,
               }))
             : [];
@@ -86,6 +90,7 @@ export default {
               datas
                 .filter((data) => data.appointment.status === "accepted")
                 .map(async (data) => ({
+                  type: "appointment",
                   id: data.appointment.id,
                   title: "Rendez-vous",
                   start: new Date(data.appointment.start_date),
@@ -134,20 +139,21 @@ export default {
     const calendarOptions = ref({
       plugins: [interactionPlugin, timeGridPlugin],
       initialView: "timeGridWeek",
-      height: 700,
+      height: "auto",
       nowIndicator: true,
       locale: frLocale,
       headerToolbar: {
         left: "prev,next",
-        center: "title",
-        right: "timeGridWeek,timeGridDay",
+        right: "today,timeGridWeek,timeGridDay",
       },
       titleFormat: { year: "numeric", month: "long", day: "numeric" },
       allDaySlot: false,
       slotMinTime: "07:00:00",
-      slotMaxTime: "19:00:00",
+      slotMaxTime: "20:00:00",
       expandRows: true,
       selectable: true,
+      selectMirror: true,
+      selectOverlap: false,
       events: async (info, successCallback, failureCallback) => {
         try {
           const availabilities = await getAvailabilities();
@@ -162,6 +168,13 @@ export default {
         openInfosModal();
         eventsInfos.value = info;
       },
+      select: function (info) {
+        selectedDates.value = {
+          start: info.startStr,
+          end: info.endStr,
+        };
+        createAvailabilityModal.value = true;
+      },
     });
 
     return {
@@ -173,49 +186,54 @@ export default {
       infosEventsModal,
       eventsInfos,
       closeInfosEvents,
+      selectedDates,
     };
   },
 };
 </script>
 
 <template>
-  <div>
-    <div class="container mx-auto w-100 mt-5 items-center flex flex-col">
-      <h1 class="text-center text-5xl mb-6">Mon calendrier</h1>
-      <UButton class="w-1/12" @click="createAvailabilityModal = true">
-        Créer une Disponibilité
-      </UButton>
-      <Modal
-        :isOpen="createAvailabilityModal"
-        :title="`Créer une disponibilité`"
-        @update:isOpen="(value) => (createAvailabilityModal = value)"
-      >
-        <CreateAvailabilityForm
-          @closeModal="closeCreateAvailability"
-          @refetchEvents="refetchEvents"
-        />
-      </Modal>
-      <Modal
-        :isOpen="infosEventsModal"
-        :title="
-          eventsInfos?.event?.extendedProps?.status
-            ? `Votre rendez-vous avec ${eventsInfos.event.extendedProps.customer.firstname} ${eventsInfos.event.extendedProps.customer.lastname}`
-            : 'Votre disponibilité'
-        "
-        @update:isOpen="(value) => (infosEventsModal = value)"
+  <div
+    class="container mx-auto items-center flex flex-col place-content-center min-h-screen"
+  >
+    <h1 class="text-center text-4xl mb-6">Mon calendrier</h1>
+    <UButton
+      class="mb-5"
+      @click="(createAvailabilityModal = true) && (selectedDates = null)"
+    >
+      Créer une Disponibilité
+    </UButton>
+    <Modal
+      :isOpen="createAvailabilityModal"
+      :title="`Créer une disponibilité`"
+      @update:isOpen="(value) => (createAvailabilityModal = value)"
+    >
+      <CreateAvailabilityForm
+        @closeModal="closeCreateAvailability"
         @refetchEvents="refetchEvents"
-      >
-        <InfosEvents
-          :eventsInfos="eventsInfos"
-          @closeEvents="closeInfosEvents"
-          @refetchEvents="refetchEvents"
-      /></Modal>
-      <FullCalendar
-        :options="calendarOptions"
-        ref="calendarRef"
-        style="width: 60vw"
+        :selectedDates="selectedDates"
       />
-    </div>
+    </Modal>
+    <Modal
+      :isOpen="infosEventsModal"
+      :title="
+        eventsInfos?.event?.extendedProps?.status
+          ? `Votre rendez-vous avec ${eventsInfos.event.extendedProps.customer.firstname} ${eventsInfos.event.extendedProps.customer.lastname}`
+          : 'Votre disponibilité'
+      "
+      @update:isOpen="(value) => (infosEventsModal = value)"
+      @refetchEvents="refetchEvents"
+    >
+      <InfosEvents
+        :eventsInfos="eventsInfos"
+        @closeEvents="closeInfosEvents"
+        @refetchEvents="refetchEvents"
+    /></Modal>
+    <FullCalendar
+      :options="calendarOptions"
+      ref="calendarRef"
+      style="width: 60vw"
+    />
   </div>
 </template>
 
