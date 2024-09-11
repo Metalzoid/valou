@@ -17,6 +17,7 @@ export const useUserStore = defineStore("user", {
         if (userData) {
           try {
             this.currentUser = JSON.parse(userData);
+            return this.currentUser;
           } catch (error) {
             console.error(
               "Erreur lors de la récupération de l'utilisateur :",

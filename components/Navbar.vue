@@ -4,6 +4,7 @@ import { useRouter } from "vue-router";
 const { logout } = useApi();
 const route = useRoute();
 const router = useRouter();
+const modalProfil = ref(false);
 
 let mobileChecked = ref(false);
 
@@ -47,9 +48,9 @@ watch(
     const body = document.querySelector("body");
 
     if (newVal) {
-      body.style.margin = "12vh 0 0 20vw";
+      body.style.marginLeft = "20vw";
     } else {
-      body.style.margin = "12vh 0 0 0";
+      body.style.marginLeft = "0";
     }
   }
 );
@@ -60,59 +61,6 @@ watch(
     <div>
       <header>
         <div id="navigation">
-          <NuxtLink to="/" @click="scrollToTop()" class="logo"
-            ><img src="/img/logo.png" alt="logo"
-          /></NuxtLink>
-          <div id="nav">
-            <div class="profil" v-if="userStore.currentUser">
-              Bienvenue {{ userStore.currentUser.firstname }} !
-            </div>
-            <ul class="nav">
-              <li>
-                <NuxtLink
-                  to="/"
-                  @click="scrollToTop()"
-                  :class="{ active: route.path === '/' }"
-                  >Accueil</NuxtLink
-                >
-              </li>
-              <li>
-                <NuxtLink
-                  to="/calendar"
-                  :class="{ active: route.path.includes('/calendar') }"
-                  >Calendrier</NuxtLink
-                >
-              </li>
-              <li>
-                <NuxtLink
-                  to="/dashboard"
-                  :class="{ active: route.path.includes('/dashboard') }"
-                  >Dashboard</NuxtLink
-                >
-              </li>
-            </ul>
-            <div class="w-full text-center">
-              <ul>
-                <li>
-                  <NuxtLink
-                    to="/login"
-                    :class="{ active: route.path.includes('/login') }"
-                    v-if="!userStore.currentUser"
-                    >Se connecter</NuxtLink
-                  >
-                </li>
-                <li>
-                  <NuxtLink
-                    @click="handleLogout"
-                    style="cursor: pointer"
-                    v-if="userStore.currentUser"
-                  >
-                    Logout
-                  </NuxtLink>
-                </li>
-              </ul>
-            </div>
-          </div>
           <div id="mobileNavDiv">
             <input type="checkbox" v-model="mobileChecked" id="mobileNavPaa" />
             <label id="burger" for="mobileNavPaa">
@@ -122,8 +70,19 @@ watch(
             </label>
             <nav id="mobileNav">
               <div class="navMobile">
-                <div class="profil" v-if="userStore.currentUser">
-                  Bienvenue {{ userStore.currentUser.firstname }} !
+                <div
+                  class="profil flex flex-col justify-center items-center gap-3"
+                  v-if="userStore.currentUser"
+                >
+                  <h3>Bienvenue {{ userStore.currentUser.firstname }} !</h3>
+                  <NuxtLink to="/profil">
+                    <NuxtImg
+                      src="/img/profil-manquant.jpg"
+                      class="h-24 w-24 profil-img cursor-pointer"
+                      :class="{ active: route.path === '/profil' }"
+                      @click="modalProfil = true"
+                    />
+                  </NuxtLink>
                 </div>
                 <div>
                   <ul>
@@ -178,6 +137,74 @@ watch(
               </div>
             </nav>
           </div>
+          <NuxtLink to="/" @click="scrollToTop()" class="logo"
+            ><img src="/img/logo.png" alt="logo"
+          /></NuxtLink>
+          <div id="nav">
+            <div
+              class="profil flex flex-col justify-center items-center gap-3"
+              :hidden="!userStore.currentUser"
+              :class="!userStore?.currentUser ? 'h-32' : ''"
+            >
+              <h3 :hidden="!userStore?.currentUser">
+                Bienvenue {{ userStore?.currentUser?.firstname }} !
+              </h3>
+              <NuxtLink to="/profil">
+                <NuxtImg
+                  src="/img/profil-manquant.jpg"
+                  class="h-24 w-24 profil-img cursor-pointer"
+                  :class="{ active: route.path === '/profil' }"
+                  @click="modalProfil = true"
+                  :hidden="!userStore.currentUser"
+                />
+              </NuxtLink>
+            </div>
+            <ul class="nav">
+              <li>
+                <NuxtLink
+                  to="/"
+                  @click="scrollToTop()"
+                  :class="{ active: route.path === '/' }"
+                  >Accueil</NuxtLink
+                >
+              </li>
+              <li>
+                <NuxtLink
+                  to="/calendar"
+                  :class="{ active: route.path.includes('/calendar') }"
+                  >Calendrier</NuxtLink
+                >
+              </li>
+              <li>
+                <NuxtLink
+                  to="/dashboard"
+                  :class="{ active: route.path.includes('/dashboard') }"
+                  >Dashboard</NuxtLink
+                >
+              </li>
+            </ul>
+            <div class="w-full text-center">
+              <ul>
+                <li>
+                  <NuxtLink
+                    to="/login"
+                    :class="{ active: route.path.includes('/login') }"
+                    v-if="!userStore.currentUser"
+                    >Se connecter</NuxtLink
+                  >
+                </li>
+                <li>
+                  <NuxtLink
+                    @click="handleLogout"
+                    style="cursor: pointer"
+                    v-if="userStore.currentUser"
+                  >
+                    Logout
+                  </NuxtLink>
+                </li>
+              </ul>
+            </div>
+          </div>
         </div>
       </header>
     </div>
@@ -219,6 +246,17 @@ watch(
     flex-grow: 0.3;
     text-align: center;
     width: 100%;
+    .profil-img {
+      border-radius: 50%;
+      transition: all ease-in-out 0.4s;
+      &.active {
+        border: 1px solid#ed672e91;
+      }
+      &:hover {
+        box-shadow: 1px 1px 20px #ed682e;
+        transform: scale(1.02);
+      }
+    }
   }
 
   #nav {
@@ -333,23 +371,25 @@ watch(
 @media only screen and (max-width: 855px) {
   #navigation {
     width: 100vw;
-    height: 12vh;
+    height: 4rem;
     margin: 0;
     justify-content: space-between;
     align-items: center;
 
+    @media only screen and (max-width: 450px) {
+      justify-content: start;
+    }
+
     .logo {
-      width: 40vw;
       display: flex;
       justify-content: center;
       align-items: center;
-      min-width: 150px;
+      img {
+        width: 16rem;
+      }
     }
     #nav {
       visibility: hidden;
-    }
-    .hireMeNav {
-      display: none;
     }
     #mobileNavDiv {
       height: 100%;
@@ -372,11 +412,12 @@ watch(
   #mobileNav {
     background: rgb(255, 255, 255);
     width: 20vw;
+    min-width: min-content;
     height: 100%;
     position: fixed;
     left: 0;
     transition-timing-function: cubic-bezier(10, 2, 3, 1);
-    transform: translateX(-35vw);
+    transform: translateX(-30vw);
     top: 0;
     z-index: -1;
     transition: 0.5s;

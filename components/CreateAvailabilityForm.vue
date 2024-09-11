@@ -1,6 +1,5 @@
 <script setup>
 const { postData } = useApi();
-const { showFlashMessage } = useFlashMessage();
 
 const emit = defineEmits(["closeModal", "refetchEvents"]);
 
@@ -66,7 +65,11 @@ const onSubmit = async () => {
   const response = await postData("availabilities", formData);
 
   if (response.success) {
-    showFlashMessage(response.data.message, "success");
+    $swal.fire({
+      title: "Génial!",
+      text: response.data.message,
+      icon: "success",
+    });
     form.value.clear();
     closeModal();
     refetchEvents();
@@ -79,7 +82,11 @@ const onSubmit = async () => {
     );
     form.value.setErrors(errors);
     errors.forEach((err) => {
-      showFlashMessage(err.message, "danger", 4000);
+      $swal.fire({
+        title: "Une erreur est survenue!",
+        text: err.message,
+        icon: "error",
+      });
     });
   }
 };

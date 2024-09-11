@@ -1,6 +1,5 @@
 <script setup>
 const { deleteData, updateData } = useApi();
-const { showFlashMessage } = useFlashMessage();
 
 const props = defineProps({
   eventsInfos: Object,
@@ -20,8 +19,8 @@ const statusOptions = [
     value: "accepted",
   },
   {
-    name: "Refuser ?",
-    value: "refused",
+    name: "Annuler ?",
+    value: "canceled",
   },
 ];
 
@@ -120,14 +119,14 @@ const updateAvailability = async () => {
   );
 
   if (response.success) {
-    showFlashMessage(response.data.message, "success");
+    // showFlashMessage(response.data.message, "success");
     form.value.clear();
     closeModal();
     refetchEvents();
   } else {
     form.value.setErrors(errors);
     errors.forEach((err) => {
-      showFlashMessage(err.message, "danger", 4000);
+      // showFlashMessage(err.message, "danger", 4000);
     });
   }
 };

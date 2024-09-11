@@ -65,6 +65,9 @@ export default {
                 end: new Date(date.end_date),
                 available: date.available,
                 id: date.id,
+                color: "#EEFFEE",
+                borderColor: "#66CC00",
+                textColor: "black",
               }))
             : [];
         } else {
@@ -101,6 +104,8 @@ export default {
                   status: data.appointment.status,
                   customer: await getUserInfos(data.appointment.customer_id),
                   services: data.services,
+                  borderColor: "0000FF",
+                  color: "#4DBFF7",
                 }))
             );
           } else {
@@ -152,8 +157,14 @@ export default {
       views: {
         fiveDaysTimeGrid: {
           type: "timeGrid",
-          duration: { days: 5 },
+          dayCount: 5,
           buttonText: "5 jours",
+        },
+        timeOneDayGrid: {
+          type: "timeGrid",
+          dayCount: 1,
+          buttonText: "Jour",
+          titleFormat: { year: "numeric", month: "2-digit", day: "2-digit" },
         },
       },
       height: "auto",
@@ -161,7 +172,7 @@ export default {
       locale: frLocale,
       headerToolbar: {
         left: "prev,today,next",
-        right: "timeGridWeek,fiveDaysTimeGrid,timeGridDay",
+        right: "timeGridWeek,fiveDaysTimeGrid,timeOneDayGrid",
       },
       allDaySlot: false,
       slotMinTime: "07:00:00",
@@ -236,7 +247,7 @@ export default {
 
 <template>
   <div
-    class="container mx-auto items-center flex flex-col place-content-center min-h-screen"
+    class="mt-5 container mx-auto items-center flex flex-col place-content-center"
   >
     <h1 class="text-center text-4xl mb-6">Mon calendrier</h1>
     <UButton

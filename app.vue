@@ -9,7 +9,6 @@ const scrollToTop = () => {
 
 <template>
   <div class="text-black">
-    <FlashMessage class="fixed top-12 left-0 right-0" style="z-index: 10000" />
     <Navbar :user="user" />
     <NuxtPage />
     <UModals />
@@ -30,7 +29,7 @@ body {
   transition: all ease-in-out 0.4s;
   @media (max-width: 855px) {
     margin-left: 0;
-    margin-top: 12vh;
+    margin-top: 4rem;
   }
 }
 #toTopButton {
