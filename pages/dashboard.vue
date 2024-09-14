@@ -30,14 +30,14 @@ const allDatas = await getData("user_datas");
   <NavBarDashboard :links :width="'75'" />
   <div
     class="flex h-full flex-wrap justify-center gap-5"
-    v-if="route.fullPath === '/dashboard'"
+    v-if="route?.fullPath === '/dashboard'"
   >
-    <DashboardMainDashboard :allDatas="allDatas.data.data" />
+    <DashboardMainDashboard :allDatas="allDatas?.data?.data" />
   </div>
   <div
     class="flex h-full flex-wrap justify-center gap-5"
-    v-if="route.fullPath === '/dashboard?services'"
+    v-if="route?.fullPath === '/dashboard?services'"
   >
-    <DashboardServicesDashboard :allDatas="allDatas.data.data" />
+    <DashboardServicesDashboard :allDatas="allDatas?.data?.data" />
   </div>
 </template>
