@@ -5,16 +5,24 @@ const props = defineProps({
 
 const services = ref(props.allDatas?.services);
 
+const checkId = (service, inputService) => {
+  return service.id === inputService.id;
+};
+
+const updateService = (inputService) => {
+  const indexService = services.value.findIndex((service) =>
+    checkId(service, inputService)
+  );
+  services.value[indexService] = inputService;
+};
+
 const createServiceModal = ref(false);
 const closeCreateService = () => {
   createServiceModal.value = false;
 };
 
 const addNewService = (service) => {
-  console.log(service);
-
   services.value.push(service);
-  console.log(services.value);
 };
 </script>
 
@@ -39,7 +47,7 @@ const addNewService = (service) => {
       Ajouter une prestation
     </UButton>
     <div v-for="service in services" :key="service.id">
-      <DashboardServiceCard :service="service" />
+      <DashboardServiceCard :service="service" @updateService="updateService" />
     </div>
   </div>
   <UDivider orientation="vertical" />

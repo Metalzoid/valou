@@ -6,7 +6,19 @@ const props = defineProps({
   service: Object,
 });
 
+const emit = defineEmits(["updateService"]);
+
+const updateService = (service) => {
+  emit("updateService", service);
+};
+
 const disabled = ref(props.service?.disabled);
+
+const updateServiceModal = ref(false);
+
+const closeUpdateService = () => {
+  updateServiceModal.value = false;
+};
 
 const updateStatusService = async () => {
   let formData = {
@@ -34,12 +46,28 @@ const updateStatusService = async () => {
 </script>
 
 <template>
+  <Modal
+    :isOpen="updateServiceModal"
+    :title="`Modifier une prestation`"
+    @update:isOpen="(value) => (updateServiceModal = value)"
+  >
+    <DashboardServiceForm
+      @closeModal="closeUpdateService"
+      @updateService="updateService"
+      method="update"
+      :service="props.service"
+    />
+  </Modal>
   <div class="card">
     <div class="flex justify-between w-full items-start">
       <h1 class="font-mono text-3xl text-indigo-700">
         {{ props.service?.title }}
       </h1>
-      <font-awesome-icon :icon="['fas', 'pen']" />
+      <font-awesome-icon
+        :icon="['fas', 'pen']"
+        @click="updateServiceModal = true"
+        class="cursor-pointer"
+      />
     </div>
     <UDivider />
     <div class="flex justify-between w-full">

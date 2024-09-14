@@ -1,8 +1,8 @@
 <script setup>
-const { postData } = useApi();
+const { postData, updateData } = useApi();
 const { $swal } = useNuxtApp();
 
-const emit = defineEmits(["closeModal"]);
+const emit = defineEmits(["closeModal", "updateService"]);
 
 const closeModal = () => {
   emit("closeModal", "addNewService");
@@ -10,6 +10,7 @@ const closeModal = () => {
 
 const props = defineProps({
   method: String,
+  service: Object,
 });
 
 const state = reactive({
@@ -21,27 +22,14 @@ const state = reactive({
 
 const form = ref();
 
-const createService = () => {
-  
-}
-
-const onSubmit = async () => {
-  form.value.clear();
-  let formData = {
-    service: {
-      title: state.title,
-      time: state.time,
-      price: state.price,
-    },
-  };
-
-  const response = await postData("services", formData);
-
+const renderSubmit = (response, method) => {
   if (response.success) {
     state.id = response.data.data.id;
     $swal.fire({
       title: "Génial!",
-      text: "Prestation crée avec succès",
+      text: `Prestation ${
+        method === "create" ? "crée" : "mise à jour"
+      } avec succès`,
       icon: "success",
     });
     emit("addNewService", state);
@@ -64,6 +52,33 @@ const onSubmit = async () => {
     });
   }
 };
+
+const onSubmit = async () => {
+  form.value.clear();
+  let formData = {
+    service: {
+      title: state.title,
+      time: state.time,
+      price: state.price,
+    },
+  };
+  if (props.method === "create") {
+    const response = await postData("services", formData);
+    renderSubmit(response, props?.method);
+  } else {
+    const response = await updateData(`services/${state.id}`, formData);
+    renderSubmit(response, props?.method);
+    emit("updateService", state);
+  }
+};
+
+watch(
+  () => props?.service,
+  (newVal) => {
+    Object.assign(state, newVal);
+  },
+  { immediate: true }
+);
 </script>
 
 <template>
