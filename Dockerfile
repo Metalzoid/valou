@@ -9,4 +9,4 @@ COPY . /app
 
 RUN yarn run build
 
-CMD ["node", ".output/server/index.mjs"]
+CMD ["yarn", "run", "start"]
