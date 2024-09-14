@@ -8,6 +8,10 @@ const closeModal = () => {
   emit("closeModal", "addNewService");
 };
 
+const props = defineProps({
+  method: String,
+});
+
 const state = reactive({
   id: undefined,
   title: undefined,

@@ -4,10 +4,12 @@ WORKDIR /app
 
 COPY package*.json ./
 
-RUN yarn install
+RUN yarn install --frozen-lockfile
 
 COPY . .
 
 EXPOSE 3000
 
-RUN yarn run build
+RUN yarn build
+
+CMD ["node", ".output/server/index.mjs"]

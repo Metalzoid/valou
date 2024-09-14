@@ -1,20 +1,10 @@
-<script setup>
-const scrollToTop = () => {
-  window.scrollTo({
-    top: 0,
-    behavior: "smooth",
-  });
-};
-</script>
+<script setup></script>
 
 <template>
   <div class="text-black">
     <Navbar />
     <NuxtPage />
     <UModals />
-    <div id="toTopButton" @click="scrollToTop()">
-      <font-awesome-icon :icon="['fas', 'arrow-up']" style="color: black" />
-    </div>
   </div>
 </template>
 

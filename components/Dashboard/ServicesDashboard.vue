@@ -24,9 +24,10 @@ const addNewService = (service) => {
     :title="`Ajouter une prestation`"
     @update:isOpen="(value) => (createServiceModal = value)"
   >
-    <DashboardCreateServiceForm
+    <DashboardServiceForm
       @closeModal="closeCreateService"
       @addNewService="addNewService"
+      method="create"
     />
   </Modal>
   <div class="container">
