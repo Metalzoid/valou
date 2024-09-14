@@ -1,17 +1,12 @@
-FROM node:latest
+FROM node:18
 
 WORKDIR /app
 
-COPY package.json /app/
+COPY package.json /app
 
-COPY yarn.lock /app/
+RUN yarn install
+COPY . /app
 
-RUN yarn install --frozen-lockfile
+RUN yarn run build
 
-COPY . .
-
-EXPOSE 3000
-
-RUN yarn build
-
-CMD ["yarn", "start", "--watch"]
+CMD ["node", ".output/server/index.mjs"]
