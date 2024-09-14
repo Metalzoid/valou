@@ -2,7 +2,9 @@ FROM node:20.15.1
 
 WORKDIR /app
 
-COPY package*.json ./
+COPY package*.json /app/
+
+COPY yarn*.lock /app/
 
 RUN yarn install --frozen-lockfile
 
