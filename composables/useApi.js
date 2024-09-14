@@ -44,11 +44,7 @@ export default function useApi() {
       const serialized_response = await response.json();
 
       if (!response.ok) {
-        throw new Error(
-          serialized_response.message ||
-            serialized_response.error ||
-            "An unknown error occurred"
-        );
+        return { success: false, error: serialized_response.error };
       }
 
       sessionStorage.setItem(

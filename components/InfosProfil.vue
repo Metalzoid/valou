@@ -5,12 +5,14 @@ const { $swal } = useNuxtApp();
 
 const uiOptions = {
   label: {
-    base: "block font-medium text-gray-200 dark:text-gray-900",
+    base: "block font-medium text-gray-900 dark:text-gray-900",
   },
+  error: "mt-2 text-red-800 dark:text-red-800",
 };
 
 const form = ref(null);
 const togglePassword = ref(false);
+const storedUser = userStore.loadUserFromSession();
 
 const errorPaths = {
   current_password: "currentPassword",
@@ -24,33 +26,28 @@ const translatePaths = {
 
 const translateMessages = {
   "is invalid": "est invalide.",
-  "User has been updated.": "Votre profil à bien été mis à jour.",
+  "User has been updated.": "Votre profil a bien été mis à jour.",
 };
 
 const currentUser = reactive({
   id: undefined,
-  email: undefined,
-  firstname: undefined,
-  lastname: undefined,
-  company: undefined,
-  role: undefined,
-  currentPassword: undefined,
-  newPassword: undefined,
-  newPasswordConfirmation: undefined,
+  email: "",
+  firstname: "",
+  lastname: "",
+  company: "",
+  role: "",
+  phone_number: "",
+  currentPassword: "",
+  newPassword: "",
+  newPasswordConfirmation: "",
 });
 
 const userDataAreDifferent = computed(() => {
-  const keys = [
-    "firstname",
-    "lastname",
-    "email",
-    "company",
-    "newPassword",
-    "newPasswordConfirmation",
-  ];
-  if (currentUser && userStore.currentUser) {
+  const keys = ["firstname", "lastname", "email", "company", "phone_number"];
+  if (userStore.currentUser) {
     return keys.some((key) => currentUser[key] !== userStore.currentUser[key]);
   }
+  return false;
 });
 
 const newPasswordsAreDifferent = computed(() => {
@@ -58,55 +55,69 @@ const newPasswordsAreDifferent = computed(() => {
 });
 
 const onSubmit = async () => {
-  let formData = {
+  const formData = {
     user: {
       firstname: currentUser.firstname,
       lastname: currentUser.lastname,
       company: currentUser.company,
       current_password: currentUser.currentPassword,
-      ...(currentUser.newPassword ? { password: currentUser.newPassword } : {}),
-      ...(currentUser.newPasswordConfirmation
-        ? { password_confirmation: currentUser.newPasswordConfirmation }
-        : {}),
+      ...(currentUser.newPassword && {
+        password: currentUser.newPassword,
+      }),
+      ...(currentUser.newPasswordConfirmation && {
+        password_confirmation: currentUser.newPasswordConfirmation,
+      }),
     },
   };
 
-  const response = await updateData("signup", formData);
+  try {
+    const response = await updateData("signup", formData);
 
-  if (response.success) {
-    userStore.setUser(JSON.parse(JSON.stringify(currentUser)));
-    $swal.fire({
-      title: "Génial !",
-      text: translateMessages[response.data.message],
-      icon: "success",
-    });
-    form.value.clear();
-  } else {
-    const errors = Object.entries(response.data.errors).map(
-      ([path, message]) => ({
-        path: errorPaths[path] ? errorPaths[path] : path,
-        message: translateMessages[message[0]]
-          ? `${translatePaths[path]} ${translateMessages[message[0]]}`
-          : message[0],
-      })
-    );
-
-    form.value.setErrors(errors);
-    errors.forEach((err) => {
-      $swal.fire({
-        title: "Une erreur est survenue!",
-        text: err.message,
-        icon: "error",
+    if (response.success) {
+      userStore.setUser(JSON.parse(JSON.stringify(currentUser)));
+      sessionStorage.setItem(
+        "user",
+        JSON.stringify(JSON.parse(JSON.stringify(currentUser))),
+        60,
+        "m"
+      );
+      await $swal.fire({
+        title: "Génial !",
+        text: translateMessages[response.data.message] || response.data.message,
+        icon: "success",
       });
+      form.value.clear();
+    } else {
+      const errors = Object.entries(response.data.errors).map(
+        ([path, message]) => ({
+          path: errorPaths[path] || path,
+          message: translateMessages[message[0]]
+            ? `${translatePaths[path] || path} ${translateMessages[message[0]]}`
+            : message[0],
+        })
+      );
+
+      form.value.setErrors(errors);
+      errors.forEach((err) => {
+        $swal.fire({
+          title: "Une erreur est survenue!",
+          text: err.message,
+          icon: "error",
+        });
+      });
+    }
+  } catch (error) {
+    console.error("Erreur lors de la soumission du formulaire:", error);
+    await $swal.fire({
+      title: "Erreur",
+      text: "Une erreur inattendue est survenue. Veuillez réessayer plus tard.",
+      icon: "error",
     });
   }
 };
-
 onMounted(() => {
-  const user = userStore.loadUserFromSession();
-  if (user) {
-    Object.assign(currentUser, user);
-  }
+  const tempUser = userStore.loadUserFromSession();
+  Object.assign(currentUser, tempUser);
 });
 </script>
 <template>
@@ -145,9 +156,22 @@ onMounted(() => {
             />
           </UFormGroup>
         </div>
-        <UFormGroup label="Votre entreprise" :ui="uiOptions" class="flex-auto">
-          <UInput v-model="currentUser.company" />
-        </UFormGroup>
+        <div class="flex justify-between gap-5 flex-wrap">
+          <UFormGroup
+            label="Votre numéro de téléphone"
+            :ui="uiOptions"
+            class="flex-auto"
+          >
+            <UInput v-model="currentUser.phone_number" type="tel" required />
+          </UFormGroup>
+          <UFormGroup
+            label="Votre entreprise"
+            :ui="uiOptions"
+            class="flex-auto"
+          >
+            <UInput v-model="currentUser.company" />
+          </UFormGroup>
+        </div>
         <div>
           <UButton
             class="mt-5"
@@ -212,13 +236,12 @@ onMounted(() => {
             </UFormGroup>
           </div>
         </div>
-
         <div>
           <UFormGroup
             label="Mot de passe actuel"
             :ui="uiOptions"
             name="currentPassword"
-            v-if="userDataAreDifferent"
+            v-show="userDataAreDifferent"
           >
             <UInput
               type="password"
@@ -226,12 +249,6 @@ onMounted(() => {
               icon="i-heroicons-envelope"
               v-model="currentUser.currentPassword"
               required
-              :class="{
-                'border-red-500 dark:bg-gray-900 rounded-md':
-                  newPasswordsAreDifferent,
-                'border-gray-300 dark:bg-gray-900 rounded-md':
-                  !newPasswordsAreDifferent,
-              }"
             />
           </UFormGroup>
           <UButton type="submit" class="mt-5" :disabled="!userDataAreDifferent"
@@ -280,7 +297,6 @@ onMounted(() => {
       ::placeholder {
         color: rgb(182, 182, 182);
       }
-
     }
   }
 }

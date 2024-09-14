@@ -2,6 +2,9 @@
 import { useRouter } from "vue-router";
 const router = useRouter();
 const { login, register } = useApi();
+const { $swal } = useNuxtApp();
+
+const form = ref();
 
 const props = defineProps({
   method: String,
@@ -14,7 +17,7 @@ const userLogin = reactive({
 
 const uiOptions = {
   label: {
-    base: "block font-medium text-gray-200 dark:text-gray-900",
+    base: "block font-medium text-gray-900 dark:text-gray-900",
   },
 };
 
@@ -32,6 +35,23 @@ const handleSubmit = async () => {
       sessionStorage.removeItem("redirectAfterLogin");
       return router.push(redirectPath);
     }
+  } else if (result && !result.success) {
+    const errors = [
+      {
+        path: "email",
+        message: "Email ou mot de passe invalide.",
+      },
+      {
+        path: "password",
+        message: "Email ou mot de passe invalide.",
+      },
+    ];
+    form.value.setErrors(errors);
+    $swal.fire({
+      icon: "error",
+      title: "Oups...",
+      text: "Email ou Mot de passe invalide !",
+    });
   }
 };
 </script>
@@ -44,7 +64,7 @@ const handleSubmit = async () => {
     class="form gap-5 flex flex-col w-9/12"
     ref="form"
   >
-    <UFormGroup label="Email" :ui="uiOptions">
+    <UFormGroup label="Email" :ui="uiOptions" name="email">
       <UInput
         placeholder="anthony.bridgerton@example.com"
         icon="i-heroicons-envelope"

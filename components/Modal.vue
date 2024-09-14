@@ -7,6 +7,7 @@ const props = defineProps({
     type: String,
   },
 });
+
 const emit = defineEmits(["update:isOpen"]);
 </script>
 
@@ -23,7 +24,7 @@ const emit = defineEmits(["update:isOpen"]);
           <h3
             class="text-base font-semibold leading-6 text-gray-900 dark:text-white"
           >
-            {{ props.title }}
+            {{ props.title || title }}
           </h3>
           <UButton
             color="gray"

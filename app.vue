@@ -9,7 +9,7 @@ const scrollToTop = () => {
 
 <template>
   <div class="text-black">
-    <Navbar :user="user" />
+    <Navbar />
     <NuxtPage />
     <UModals />
     <div id="toTopButton" @click="scrollToTop()">
@@ -31,6 +31,12 @@ body {
     margin-left: 0;
     margin-top: 4rem;
   }
+}
+.container {
+  margin: 4rem;
+  width: auto;
+  display: flex;
+  flex-direction: column;
 }
 #toTopButton {
   z-index: 5;

@@ -1,15 +1,7 @@
 <script setup>
 const route = useRoute();
 
-const props = defineProps({
-  links: [
-    {
-      to: String,
-      fullpath: String,
-      name: String,
-    },
-  ],
-});
+const props = defineProps(["links", "width"]);
 
 const toggleDashboardNavbar = ref(true);
 const linksDiv = ref(null);
@@ -48,11 +40,14 @@ onUnmounted(() => {
 
 <template>
   <div class="container">
-    <ul class="links" ref="linksDiv">
+    <ul class="links" ref="linksDiv" :style="{ width: `${props.width}%` }">
       <NuxtLink
         v-for="link in props.links"
+        :key="link.id"
         :to="link.to"
-        :class="{ active: route.fullPath === link.fullpath }"
+        :class="{
+          active: link.fullpath.some((path) => path === route.fullPath),
+        }"
         >{{ link.name }}</NuxtLink
       >
     </ul>
@@ -68,30 +63,29 @@ onUnmounted(() => {
 
 <style scoped lang="scss">
 .container {
-  margin: 4rem;
-  width: auto;
   display: flex;
+  width: auto;
   flex-direction: column;
   align-items: center;
+  margin-top: 2rem;
   .links {
     display: flex;
     justify-content: space-evenly;
     background-color: white;
-    width: 75vw;
-    border-radius: 0.4rem;
-    padding: 0.5rem;
+    border-radius: 0.7rem;
+    padding: 0.7rem;
     box-shadow: 4px 4px 10px rgba(1, 1, 1, 0.2);
     transition-timing-function: cubic-bezier(10, 2, 3, 1);
     transition: all ease-in-out 0.3s;
     transform: translateY(-0vw);
     a {
-      transition: all ease-in-out 0.25s;
-      padding: 0.5rem;
+      transition: all ease-in-out 0.2s;
+      padding: 0.3rem;
       border: 1px solid transparent;
-      border-radius: 0.45rem;
+      border-radius: 0.7rem;
       &:hover {
         color: #ed682e;
-        box-shadow: 2px 2px 25px rgba(1, 1, 1, 0.12);
+        box-shadow: 2px 2px 10px rgba(1, 1, 1, 0.08);
       }
     }
 

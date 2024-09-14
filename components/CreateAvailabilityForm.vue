@@ -1,5 +1,6 @@
 <script setup>
 const { postData } = useApi();
+const { $swal } = useNuxtApp();
 
 const emit = defineEmits(["closeModal", "refetchEvents"]);
 
@@ -39,7 +40,6 @@ watch(
 );
 
 const onSubmit = async () => {
-  form.value.clear();
   let formData = {
     availability: {
       start_date: state.start_date,

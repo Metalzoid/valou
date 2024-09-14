@@ -2,7 +2,25 @@
 export default defineNuxtConfig({
   compatibilityDate: "2024-04-03",
   devtools: { enabled: true },
-  modules: ["@nuxt/ui", "@pinia/nuxt", "@nuxt/image"],
+  modules: [
+    "@nuxt/ui",
+    "@pinia/nuxt",
+    "@nuxt/image",
+    "@nuxtjs/color-mode",
+    "@nuxtjs/tailwindcss",
+  ],
+  colorMode: {
+    preference: "light",
+    classSuffix: "",
+  },
+  tailwindcss: {
+    config: {
+      darkMode: "class",
+    },
+  },
+  ui: {
+    disableGlobalStyles: true,
+  },
   runtimeConfig: {
     public: {
       ADMIN_API_KEY: process.env.ADMIN_API_KEY,

@@ -3,12 +3,9 @@ definePageMeta({
   middleware: ["auth"],
 });
 
-const userStore = useUserStore();
-onMounted(() => {
-  userStore.loadUserFromSession();
-});
+
 </script>
 <template>
-  <InfosProfil :user="userStore.currentUser" />
+  <InfosProfil />
 </template>
 <style lang="scss" scoped></style>

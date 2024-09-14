@@ -1,12 +1,23 @@
 <script setup>
 import { useRouter } from "vue-router";
-
 const { logout } = useApi();
 const route = useRoute();
 const router = useRouter();
-const modalProfil = ref(false);
 
 let mobileChecked = ref(false);
+
+const user = ref({
+  id: null,
+  email: null,
+  firstname: null,
+  lastname: null,
+  company: null,
+  role: null,
+  phone_number: null,
+  currentPassword: null,
+  newPassword: null,
+  newPasswordConfirmation: null,
+});
 
 const toggleNavMobile = () => {
   mobileChecked.value = false;
@@ -39,7 +50,12 @@ const handleLogout = async () => {
 };
 
 onMounted(() => {
-  userStore.loadUserFromSession();
+  const tempUser = userStore.loadUserFromSession();
+  user.value = tempUser;
+});
+
+userStore.$subscribe((mutation, state) => {
+  user.value = state.currentUser;
 });
 
 watch(
@@ -72,20 +88,20 @@ watch(
               <div class="navMobile">
                 <div
                   class="profil flex flex-col justify-center items-center gap-3"
-                  v-if="userStore.currentUser"
+                  v-if="user"
                 >
-                  <h3>Bienvenue {{ userStore.currentUser.firstname }} !</h3>
+                  <h3>Bienvenue {{ user?.firstname }} !</h3>
                   <NuxtLink to="/profil">
                     <NuxtImg
                       src="/img/profil-manquant.jpg"
                       class="h-24 w-24 profil-img cursor-pointer"
                       :class="{ active: route.path === '/profil' }"
-                      @click="modalProfil = true"
                     />
                   </NuxtLink>
                 </div>
                 <div>
                   <ul>
+                    <UDivider />
                     <li>
                       <NuxtLink
                         to="/"
@@ -94,6 +110,7 @@ watch(
                         >Accueil</NuxtLink
                       >
                     </li>
+                    <UDivider />
                     <li>
                       <NuxtLink
                         to="/calendar"
@@ -102,6 +119,7 @@ watch(
                         >Calendrier</NuxtLink
                       >
                     </li>
+                    <UDivider />
                     <li>
                       <NuxtLink
                         to="/dashboard"
@@ -110,6 +128,7 @@ watch(
                         >Dashboard</NuxtLink
                       >
                     </li>
+                    <UDivider />
                   </ul>
                 </div>
                 <div>
@@ -119,7 +138,7 @@ watch(
                         to="/login"
                         @click="handleNavClick"
                         :class="{ active: route.path.includes('/login') }"
-                        v-if="!userStore.currentUser"
+                        v-if="!user"
                         >Se connecter</NuxtLink
                       >
                     </li>
@@ -127,9 +146,9 @@ watch(
                       <NuxtLink
                         @click="handleLogout"
                         style="cursor: pointer"
-                        v-if="userStore.currentUser"
+                        v-if="user"
                       >
-                        Logout
+                        Se déconnecter
                       </NuxtLink>
                     </li>
                   </ul>
@@ -143,23 +162,21 @@ watch(
           <div id="nav">
             <div
               class="profil flex flex-col justify-center items-center gap-3"
-              :hidden="!userStore.currentUser"
-              :class="!userStore?.currentUser ? 'h-32' : ''"
+              :hidden="!user"
+              :class="!user ? 'h-32' : ''"
             >
-              <h3 :hidden="!userStore?.currentUser">
-                Bienvenue {{ userStore?.currentUser?.firstname }} !
-              </h3>
+              <h3 :hidden="!user">Bienvenue {{ user?.firstname }} !</h3>
               <NuxtLink to="/profil">
                 <NuxtImg
                   src="/img/profil-manquant.jpg"
                   class="h-24 w-24 profil-img cursor-pointer"
                   :class="{ active: route.path === '/profil' }"
-                  @click="modalProfil = true"
-                  :hidden="!userStore.currentUser"
+                  :hidden="!user"
                 />
               </NuxtLink>
             </div>
             <ul class="nav">
+              <UDivider />
               <li>
                 <NuxtLink
                   to="/"
@@ -168,6 +185,7 @@ watch(
                   >Accueil</NuxtLink
                 >
               </li>
+              <UDivider />
               <li>
                 <NuxtLink
                   to="/calendar"
@@ -175,6 +193,7 @@ watch(
                   >Calendrier</NuxtLink
                 >
               </li>
+              <UDivider />
               <li>
                 <NuxtLink
                   to="/dashboard"
@@ -182,6 +201,7 @@ watch(
                   >Dashboard</NuxtLink
                 >
               </li>
+              <UDivider />
             </ul>
             <div class="w-full text-center">
               <ul>
@@ -189,7 +209,7 @@ watch(
                   <NuxtLink
                     to="/login"
                     :class="{ active: route.path.includes('/login') }"
-                    v-if="!userStore.currentUser"
+                    v-if="!user"
                     >Se connecter</NuxtLink
                   >
                 </li>
@@ -197,9 +217,9 @@ watch(
                   <NuxtLink
                     @click="handleLogout"
                     style="cursor: pointer"
-                    v-if="userStore.currentUser"
+                    v-if="user"
                   >
-                    Logout
+                    Se déconnecter
                   </NuxtLink>
                 </li>
               </ul>

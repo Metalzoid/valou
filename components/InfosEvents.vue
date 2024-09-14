@@ -1,5 +1,6 @@
 <script setup>
-const { deleteData, updateData } = useApi();
+const { deleteData, updateData, getUserByID } = useApi();
+const { $swal } = useNuxtApp();
 
 const props = defineProps({
   eventsInfos: Object,
@@ -32,7 +33,7 @@ const event = ref({
   end: null,
   available: null,
   status: null,
-  customer_id: null,
+  customer: null,
   price: null,
   comment: null,
   seller_comment: null,
@@ -53,6 +54,25 @@ const formatDate = (date) => {
 
 const closeModal = () => {
   emit("closeEvents");
+};
+
+const getUserInfos = async (id) => {
+  try {
+    const response = await getUserByID(id);
+    if (response.success) {
+      const user = response.data.data;
+      return {
+        user_id: user.id,
+        email: user.email,
+        firstname: user.firstname,
+        lastname: user.lastname,
+        company: user.company,
+        role: user.role,
+      };
+    }
+  } catch (error) {
+    console.log(error);
+  }
 };
 
 const refetchEvents = () => {
@@ -91,11 +111,20 @@ const updateAppointment = async () => {
       appointment
     );
     if (response.success) {
+      await $swal.fire({
+        title: "Génial !",
+        text: "Mise à jour réussie.",
+        icon: "success",
+      });
       refetchEvents();
       closeModal();
     }
   } catch (error) {
-    console.log(error);
+    $swal.fire({
+      title: "Une erreur est survenue!",
+      text: error,
+      icon: "error",
+    });
   }
 };
 
@@ -119,14 +148,22 @@ const updateAvailability = async () => {
   );
 
   if (response.success) {
-    // showFlashMessage(response.data.message, "success");
+    await $swal.fire({
+      title: "Génial !",
+      text: "Mise à jour réussie.",
+      icon: "success",
+    });
     form.value.clear();
     closeModal();
     refetchEvents();
   } else {
     form.value.setErrors(errors);
     errors.forEach((err) => {
-      // showFlashMessage(err.message, "danger", 4000);
+      $swal.fire({
+        title: "Une erreur est survenue!",
+        text: err.message,
+        icon: "error",
+      });
     });
   }
 };
@@ -143,12 +180,24 @@ watch(
         end: formatDate(newVal.event.end),
         available: newVal.event.extendedProps.available,
         status: newVal.event.extendedProps.status,
-        customer: newVal.event.extendedProps.customer,
+        customer: await getUserInfos(newVal.event.extendedProps.customer_id),
         price: newVal.event.extendedProps.price,
         comment: newVal.event.extendedProps.comment,
         seller_comment: newVal.event.extendedProps.seller_comment,
         services: newVal.event.extendedProps.services,
       };
+      console.log(newVal.event?.extendedProps.type);
+
+      if (newVal?.event?.extendedProps.type === "appointment") {
+        emit(
+          "modalTitle",
+          `Votre rendez-vous avec ${event.value.customer.firstname} ${event.value.customer.lastname}`
+        );
+      } else if (newVal?.event?.extendedProps.type === "availability") {
+        emit("modalTitle", "Votre disponibilité");
+      } else {
+        emit("modalTitle", "Votre indisponibilité");
+      }
     }
   },
   { immediate: true }
@@ -193,7 +242,7 @@ watch(
     >
     <UDivider class="my-3" v-if="event.type == 'appointment'"></UDivider>
     <h1 v-if="event.services">Prestations:</h1>
-    <ul v-for="service in event.services">
+    <ul v-for="service in event.services" :key="service.id">
       <li>
         - {{ service.title }} • {{ service.time }} minutes -
         {{ service.price }} €
@@ -211,12 +260,15 @@ watch(
     <div class="mt-5 flex justify-around flex-wrap gap-3">
       <UButton
         @click="openFormUpdateAvailability()"
-        v-if="event.type == 'availability' && isFutureEvent(event.end)"
+        v-if="
+          ['availability', 'unavailability'].includes(event.type) &&
+          isFutureEvent(event.end)
+        "
         >Modifier cette disponibilité ?</UButton
       >
       <UButton
         @click="deleteAvailability(event.id)"
-        v-if="event.type == 'availability'"
+        v-if="['availability', 'unavailability'].includes(event.type)"
       >
         Supprimer cette disponibilité
       </UButton>

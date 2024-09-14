@@ -20,6 +20,11 @@ export default {
     const calendarRef = ref(null);
     const eventsInfos = ref(null);
     const selectedDates = ref(null);
+    const modalTitleEvents = ref("");
+
+    const handleModalTitle = (title) => {
+      modalTitleEvents.value = title;
+    };
 
     if (typeof window !== "undefined") {
       const userData = localStorage.getItem("user");
@@ -33,23 +38,10 @@ export default {
       }
     }
 
-    const getUserInfos = async (id) => {
-      try {
-        const response = await getUserByID(id);
-        if (response.success) {
-          const user = response.data.data;
-          return {
-            user_id: user.id,
-            email: user.email,
-            firstname: user.firstname,
-            lastname: user.lastname,
-            company: user.company,
-            role: user.role,
-          };
-        }
-      } catch (error) {
-        console.log(error);
-      }
+    const minDuration = (date1, date2) => {
+      const start = new Date(date1);
+      const end = new Date(date2);
+      return (end - start) / 60000 > 5;
     };
 
     const getAvailabilities = async () => {
@@ -57,16 +49,54 @@ export default {
         const response = await getData(`availabilities`);
         if (response.success) {
           const dates = response.data.data.availabilities;
+
+          return dates.length > 0
+            ? dates.map((date) => {
+                if (minDuration(date.start_date, date.end_date)) {
+                  return {
+                    type: "availability",
+                    title: "Disponible",
+                    start: new Date(date.start_date),
+                    end: new Date(date.end_date),
+                    available: date.available,
+                    id: date.id,
+                    color: "#EEFFEE",
+                    borderColor: "#66CC00",
+                    textColor: "black",
+                  };
+                } else {
+                  return {};
+                }
+              })
+            : [];
+        } else {
+          return [];
+        }
+      } catch (error) {
+        if (error.response && error.response.status === 404) {
+          return [];
+        } else {
+          throw error;
+        }
+      }
+    };
+
+    const getUnavailabilities = async () => {
+      try {
+        const response = await getData(`availabilities?available=false`);
+        if (response.success) {
+          const dates = response.data.data.availabilities;
+
           return dates.length > 0
             ? dates.map((date) => ({
-                type: "availability",
-                title: "Disponible",
+                type: "unavailability",
+                title: "INDISPO",
                 start: new Date(date.start_date),
                 end: new Date(date.end_date),
                 available: date.available,
                 id: date.id,
-                color: "#EEFFEE",
-                borderColor: "#66CC00",
+                color: "#FC5C5C",
+                borderColor: "#FF0000",
                 textColor: "black",
               }))
             : [];
@@ -102,7 +132,7 @@ export default {
                   comment: data.appointment.comment,
                   seller_comment: data.appointment.seller_comment,
                   status: data.appointment.status,
-                  customer: await getUserInfos(data.appointment.customer_id),
+                  customer_id: data.appointment.customer_id,
                   services: data.services,
                   borderColor: "0000FF",
                   color: "#4DBFF7",
@@ -139,6 +169,13 @@ export default {
       if (calendarRef.value) {
         calendarRef.value.getApi().refetchEvents();
       }
+    };
+
+    const isDateRangeEqual = (date1, date2) => {
+      return (
+        date1.start.toISOString() == date2.start.toISOString() &&
+        date1.end.toISOString() == date2.end.toISOString()
+      );
     };
 
     const setupTimeGridDay = () => {
@@ -184,8 +221,17 @@ export default {
       events: async (info, successCallback, failureCallback) => {
         try {
           const availabilities = await getAvailabilities();
+          const unavailabilities = await getUnavailabilities();
           const appointments = await getAppointments();
-          const data = [...availabilities, ...appointments];
+          const filteredUnavailabilities = unavailabilities.filter((obj1) => {
+            return !appointments.some((obj2) => isDateRangeEqual(obj1, obj2));
+          });
+
+          const data = [
+            ...availabilities,
+            ...filteredUnavailabilities,
+            ...appointments,
+          ];
           successCallback(data);
         } catch (error) {
           failureCallback(error);
@@ -240,15 +286,15 @@ export default {
       eventsInfos,
       closeInfosEvents,
       selectedDates,
+      handleModalTitle,
+      modalTitleEvents,
     };
   },
 };
 </script>
 
 <template>
-  <div
-    class="mt-5 container mx-auto items-center flex flex-col place-content-center"
-  >
+  <div class="mt-5 mx-auto items-center flex flex-col place-content-center">
     <h1 class="text-center text-4xl mb-6">Mon calendrier</h1>
     <UButton
       class="mb-5"
@@ -269,11 +315,7 @@ export default {
     </Modal>
     <Modal
       :isOpen="infosEventsModal"
-      :title="
-        eventsInfos?.event?.extendedProps?.status
-          ? `Votre rendez-vous avec ${eventsInfos.event.extendedProps.customer.firstname} ${eventsInfos.event.extendedProps.customer.lastname}`
-          : 'Votre disponibilité'
-      "
+      :title="modalTitleEvents"
       @update:isOpen="(value) => (infosEventsModal = value)"
       @refetchEvents="refetchEvents"
     >
@@ -281,6 +323,7 @@ export default {
         :eventsInfos="eventsInfos"
         @closeEvents="closeInfosEvents"
         @refetchEvents="refetchEvents"
+        @modalTitle="handleModalTitle"
     /></Modal>
     <FullCalendar
       :options="calendarOptions"
