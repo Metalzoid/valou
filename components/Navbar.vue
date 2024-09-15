@@ -23,19 +23,12 @@ const toggleNavMobile = () => {
   mobileChecked.value = false;
 };
 
-const scrollToTop = () => {
-  window.scrollTo({
-    top: 0,
-    behavior: "smooth",
-  });
-};
-
 const handleNavClick = () => {
   if (window.innerWidth < 855) {
     toggleNavMobile();
-    scrollToTop();
   }
 };
+
 const userStore = useUserStore();
 
 const handleLogout = async () => {
@@ -62,9 +55,10 @@ watch(
   () => mobileChecked.value,
   (newVal) => {
     const body = document.querySelector("body");
+    const navbar = document.getElementById("mobileNav");
 
     if (newVal) {
-      body.style.marginLeft = "20vw";
+      body.style.marginLeft = `${navbar.clientWidth}px`;
     } else {
       body.style.marginLeft = "0";
     }
@@ -156,7 +150,7 @@ watch(
               </div>
             </nav>
           </div>
-          <NuxtLink to="/" @click="scrollToTop()" class="logo"
+          <NuxtLink to="/" class="logo"
             ><img src="/img/logo.png" alt="logo"
           /></NuxtLink>
           <div id="nav">
@@ -178,10 +172,7 @@ watch(
             <ul class="nav">
               <UDivider />
               <li>
-                <NuxtLink
-                  to="/"
-                  @click="scrollToTop()"
-                  :class="{ active: route.path === '/' }"
+                <NuxtLink to="/" :class="{ active: route.path === '/' }"
                   >Accueil</NuxtLink
                 >
               </li>
@@ -391,28 +382,28 @@ watch(
 @media only screen and (max-width: 855px) {
   #navigation {
     width: 100vw;
-    height: 4rem;
+    height: 12vh;
+    min-height: 35px;
+    flex-direction: row-reverse;
     margin: 0;
     justify-content: space-between;
     align-items: center;
 
-    @media only screen and (max-width: 450px) {
-      justify-content: start;
-    }
-
     .logo {
-      display: flex;
-      justify-content: center;
-      align-items: center;
+      margin: 10px 0;
       img {
-        width: 16rem;
+        width: 50vw;
+        min-width: 150px;
       }
     }
     #nav {
-      visibility: hidden;
+      display: none;
     }
     #mobileNavDiv {
       height: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
       .email {
         text-decoration: underline;
         text-align: center;
@@ -437,7 +428,7 @@ watch(
     position: fixed;
     left: 0;
     transition-timing-function: cubic-bezier(10, 2, 3, 1);
-    transform: translateX(-30vw);
+    transform: translateX(-100vw);
     top: 0;
     z-index: -1;
     transition: 0.5s;
@@ -492,12 +483,11 @@ watch(
   }
 
   #burger {
-    position: absolute;
     cursor: pointer;
-    width: 2rem;
-    height: 2rem;
-    right: 1rem;
-    top: 1rem;
+    width: 5vh;
+    height: 5vh;
+    min-width: 20px;
+    min-height: 20px;
     display: flex;
     justify-content: space-between;
     flex-direction: column;
@@ -519,13 +509,13 @@ watch(
     }
     &:checked ~ #burger > div {
       &:nth-child(1) {
-        transform: translateY(15px) rotate(45deg);
+        transform: translateY(13px) rotate(45deg);
       }
       &:nth-child(2) {
         opacity: 0;
       }
       &:nth-child(3) {
-        transform: translateY(-15px) rotate(-45deg);
+        transform: translateY(-10px) rotate(-45deg);
       }
     }
   }

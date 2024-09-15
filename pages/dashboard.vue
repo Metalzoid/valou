@@ -29,6 +29,7 @@ const allDatas = await getData("user_datas");
 <template>
   <NavBarDashboard :links :width="'75'" />
   <div
+    id="mainDashboard"
     class="flex h-full flex-wrap justify-center gap-5"
     v-if="route?.fullPath === '/dashboard'"
   >
@@ -41,3 +42,11 @@ const allDatas = await getData("user_datas");
     <DashboardServicesDashboard :allDatas="allDatas?.data?.data" />
   </div>
 </template>
+<style lang="scss" scoped>
+#mainDashboard {
+  transition: all 0.4s ease-in-out;
+  @media only screen and (max-width: 855px) {
+    margin-top: 5rem;
+  }
+}
+</style>

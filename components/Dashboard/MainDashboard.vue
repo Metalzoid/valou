@@ -132,7 +132,7 @@ watch(
       <h3 class="text-3xl mt-8 text-nowrap text-indigo-700">Vos rendez-vous</h3>
       <UDivider />
     </div>
-    <div class="flex w-100 justify-around mt-3">
+    <div class="flex w-100 justify-around mt-3 flex-wrap gap-5">
       <DashboardMiniCard title="Aujourd'hui" :content="today" />
       <DashboardMiniCard title="7 prochains jours" :content="thisWeek" />
     </div>
