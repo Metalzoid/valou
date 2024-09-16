@@ -2,15 +2,12 @@ FROM node:20.15.1-slim
 
 WORKDIR /app
 
-ARG ADMIN_API_KEY
-ARG API_BASE_URL
-
 ENV NODE_ENV=production
-ENV API_BASE_URL=$API_URL
-ENV ADMIN_API_KEY=$ADMIN_API_KEY
+ENV API_BASE_URL="fake"
+ENV ADMIN_API_KEY="fake"
 
 COPY . .
-RUN yarn install --production=false
+RUN yarn install
 RUN yarn build
 
 EXPOSE 80
