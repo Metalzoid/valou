@@ -79,7 +79,15 @@ const updateStatusService = async () => {
         <p>{{ props.service?.price }} €</p>
         <UPopover mode="hover">
           <font-awesome-icon
-            :icon="['fas', `${disabled ? 'circle-xmark' : 'circle-check'}`]"
+            v-if="disabled"
+            :icon="['fas', 'circle-xmark']"
+            style="color: red"
+            @click="updateStatusService"
+          />
+          <font-awesome-icon
+            v-if="!disabled"
+            :icon="['fas', 'circle-check']"
+            style="color: green"
             @click="updateStatusService"
           />
           <template #panel>

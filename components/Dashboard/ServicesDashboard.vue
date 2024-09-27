@@ -3,7 +3,9 @@ const props = defineProps({
   allDatas: Object,
 });
 
-const services = ref(props.allDatas?.services);
+const services = ref(
+  props.allDatas?.services.sort((a, b) => a.disabled - b.disabled)
+);
 
 const checkId = (service, inputService) => {
   return service.id === inputService.id;

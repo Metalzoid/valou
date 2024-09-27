@@ -1,4 +1,12 @@
-<script setup></script>
+<script setup>
+onMounted(() => {
+  const userStore = useUserStore();
+  if (userStore.currentUser) {
+    const allDatasStore = useAllDatasStore();
+    allDatasStore.updateDatas();
+  }
+});
+</script>
 
 <template>
   <div class="text-black">

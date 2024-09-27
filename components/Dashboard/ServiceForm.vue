@@ -2,10 +2,10 @@
 const { postData, updateData } = useApi();
 const { $swal } = useNuxtApp();
 
-const emit = defineEmits(["closeModal", "updateService"]);
+const emit = defineEmits(["closeModal", "updateService", "addNewService"]);
 
 const closeModal = () => {
-  emit("closeModal", "addNewService");
+  emit("closeModal");
 };
 
 const props = defineProps({
@@ -18,6 +18,7 @@ const state = reactive({
   title: undefined,
   price: undefined,
   time: undefined,
+  disabled: false,
 });
 
 const form = ref();
@@ -60,6 +61,7 @@ const onSubmit = async () => {
       title: state.title,
       time: state.time,
       price: state.price,
+      disabled: state.disabled,
     },
   };
   if (props.method === "create") {
@@ -93,6 +95,10 @@ watch(
 
     <UFormGroup label="Prix" name="price" class="mt-5">
       <UInput v-model="state.price" type="number" />
+    </UFormGroup>
+
+    <UFormGroup label="Désactivé ?" name="disabled" class="mt-3">
+      <UToggle v-model="state.disabled" />
     </UFormGroup>
 
     <UButton type="submit" class="mt-5"> Submit </UButton>

@@ -31,6 +31,15 @@ export default defineNuxtConfig({
     transpile: ["@vuepic/vue-datepicker"],
   },
   css: ["@fortawesome/fontawesome-svg-core/styles.css"],
+  vite: {
+    css: {
+      preprocessorOptions: {
+        scss: {
+          api: "modern",
+        },
+      },
+    },
+  },
   imports: {
     dirs: [
       "composables",

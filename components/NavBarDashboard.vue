@@ -53,15 +53,22 @@ onUnmounted(() => {
 <template>
   <div class="container">
     <ul class="links" ref="linksDiv" :style="{ width: `${props.width}%` }">
-      <NuxtLink
-        v-for="link in props.links"
-        :key="link.id"
-        :to="link.to"
-        :class="{
-          active: link.fullpath.some((path) => path === route.fullPath),
-        }"
-        >{{ link.name }}</NuxtLink
+      <UChip
+        v-for="{ to, fullpath, name, chipNumber } in props.links"
+        :key="name"
+        :show="chipNumber > 0"
+        :text="chipNumber"
+        size="2xl"
       >
+        <NuxtLink
+          :to="to"
+          :class="{
+            active: fullpath.some((path) => path === route.fullPath),
+          }"
+        >
+          {{ name }}
+        </NuxtLink>
+      </UChip>
     </ul>
     <div v-if="displayToggle" class="toggleDashboardNavbar" ref="arrowToggle">
       <font-awesome-icon

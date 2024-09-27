@@ -6,7 +6,7 @@ import timeGridPlugin from "@fullcalendar/timegrid";
 import frLocale from "@fullcalendar/core/locales/fr";
 import VueDatePicker from "@vuepic/vue-datepicker";
 import "@vuepic/vue-datepicker/dist/main.css";
-
+import { useLoadingIndicator } from "#app/composables/loading-indicator";
 export default {
   components: {
     FullCalendar,

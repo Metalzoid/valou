@@ -1,5 +1,4 @@
 <script setup>
-const props = defineProps(["allDatas"]);
 const links = [
   {
     to: "yesterday",
@@ -15,25 +14,36 @@ const links = [
   },
 ];
 
+const allDatas = ref(null);
 const appointments = ref([]);
 const date = ref("today");
 const today = ref(0);
 const thisWeek = ref(0);
 
-const defineAppointments = (minDate, maxDate) => {
+const allDatasStore = useAllDatasStore();
+
+allDatasStore.$subscribe((mutation, state) => {
+  allDatas.value = state.allDatas;
+});
+
+const updateDateRef = (newDate) => {
+  date.value = newDate;
+};
+
+const defineAppointments = async (minDate, maxDate) => {
   appointments.value = [];
-  props.allDatas.appointments.map((app) => {
+
+  allDatas.value.appointments.forEach((app) => {
     if (minDate && maxDate && app.status === "accepted") {
       if (
         new Date(app.start_date) > minDate &&
         new Date(app.end_date) < maxDate
       ) {
-        const user = props.allDatas.customers.find(
+        const user = allDatas.value?.customers.find(
           (user) => user.id === app.customer_id
         );
         const appointment = {
-          start_date: app.start_date,
-          end_date: app.end_date,
+          appointment: app,
           user: user,
         };
         appointments.value.push(appointment);
@@ -42,10 +52,10 @@ const defineAppointments = (minDate, maxDate) => {
   });
 };
 
-const defineAppointmentsNumber = (minDate, maxDate, destination) => {
+const defineAppointmentsNumber = async (minDate, maxDate, destination) => {
   destination.value = 0;
 
-  props.allDatas.appointments.map((app) => {
+  allDatas.value?.appointments.map((app) => {
     if (minDate && maxDate && app.status === "accepted") {
       if (
         new Date(app.start_date) > minDate &&
@@ -57,7 +67,9 @@ const defineAppointmentsNumber = (minDate, maxDate, destination) => {
   });
 };
 
-onMounted(() => {
+onMounted(async () => {
+  await allDatasStore.loadDatas();
+  allDatas.value = allDatasStore.allDatas;
   const minDate = new Date();
   minDate.setHours("00", "00", "01");
   const maxDate = new Date();
@@ -71,7 +83,8 @@ onMounted(() => {
 
 watch(
   () => date.value,
-  (newVal) => {
+  async (newVal) => {
+    await waitForAllDatas();
     if (newVal === "today") {
       const minDate = new Date();
       minDate.setHours("00", "00", "01");
@@ -99,22 +112,17 @@ watch(
 );
 </script>
 <template>
-  <div class="container">
-    <ul class="links" ref="linksDiv">
-      <p
-        v-for="link in links"
-        :class="{ active: date === link.to }"
-        :key="link.id"
-        class="cursor-pointer"
-        @click="date = link.to"
-      >
-        {{ link.name }}
-      </p>
-    </ul>
+  <div class="container w-full">
+    <DashboardMiniLinks
+      :links="links"
+      :date="date"
+      @updateDateRef="updateDateRef"
+    />
     <div
       v-for="appointment in appointments"
       v-if="appointments.length > 0"
       :key="appointment.id"
+      class="w-full"
     >
       <DashboardAppointmentCard :appointment="appointment" />
     </div>
@@ -141,32 +149,9 @@ watch(
 <style scoped lang="scss">
 .container {
   display: flex;
-  width: max-content;
+  width: 35vw;
   flex-direction: column;
   margin-top: 2rem;
-  .links {
-    background-color: white;
-    width: 100%;
-    display: flex;
-    justify-content: space-evenly;
-    border-radius: 0.7rem;
-    padding: 0.7rem;
-    box-shadow: 4px 4px 10px rgba(1, 1, 1, 0.2);
-    transition: all ease-in-out 0.3s;
-    a {
-      transition: all ease-in-out 0.2s;
-      padding: 0.3rem;
-      border: 1px solid transparent;
-      border-radius: 0.7rem;
-      &:hover {
-        color: #ed682e;
-        box-shadow: 2px 2px 10px rgba(1, 1, 1, 0.08);
-      }
-    }
-
-    .active {
-      color: rgba(237, 104, 46, 1);
-    }
-  }
+  gap: 2rem;
 }
 </style>

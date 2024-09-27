@@ -4,11 +4,33 @@ definePageMeta({
   middleware: ["auth"],
 });
 
-const { getData } = useApi();
-
 const route = useRoute();
 
-const links = [
+const allDatas = ref(null);
+
+const allDatasStore = useAllDatasStore();
+
+allDatasStore.$subscribe((mutation, state) => {
+  allDatas.value = state.allDatas;
+});
+
+const chipNumberHold = ref(0);
+
+const isFutureEvent = (endDate) => {
+  const endDateTime = new Date(endDate);
+  const currentTime = new Date();
+  return endDateTime > currentTime;
+};
+
+const updateChipNumberAppointments = () => {
+  const appointments = allDatas.value.appointments;
+  const filteredAppointments = appointments.filter(
+    (app) => app.status === "hold" && isFutureEvent(app.end_date)
+  );
+  chipNumberHold.value = filteredAppointments.length;
+};
+
+const links = ref([
   {
     to: "/dashboard",
     fullpath: ["/dashboard"],
@@ -18,12 +40,40 @@ const links = [
     to: "?reservations",
     fullpath: ["/dashboard?reservations"],
     name: "Réservations",
+    chipNumber: chipNumberHold.value,
   },
-  { to: "?services", fullpath: ["/dashboard?services"], name: "Services" },
+  {
+    to: "?prestations",
+    fullpath: ["/dashboard?prestations"],
+    name: "Prestations",
+  },
   { to: "?clients", fullpath: ["/dashboard?clients"], name: "Clients" },
-];
+]);
 
-const allDatas = await getData("user_datas");
+onMounted(async () => {
+  await allDatasStore.loadDatas();
+  allDatas.value = allDatasStore.allDatas;
+  updateChipNumberAppointments(allDatas);
+  links.value = [
+    {
+      to: "/dashboard",
+      fullpath: ["/dashboard"],
+      name: "Dashboard",
+    },
+    {
+      to: "?reservations",
+      fullpath: ["/dashboard?reservations"],
+      name: "Réservations",
+      chipNumber: chipNumberHold.value,
+    },
+    {
+      to: "?prestations",
+      fullpath: ["/dashboard?prestations"],
+      name: "Prestations",
+    },
+    { to: "?clients", fullpath: ["/dashboard?clients"], name: "Clients" },
+  ];
+});
 </script>
 
 <template>
@@ -33,13 +83,19 @@ const allDatas = await getData("user_datas");
     class="flex h-full flex-wrap justify-center gap-5"
     v-if="route?.fullPath === '/dashboard'"
   >
-    <DashboardMainDashboard :allDatas="allDatas?.data?.data" />
+    <DashboardMainDashboard />
   </div>
   <div
     class="flex h-full flex-wrap justify-center gap-5"
-    v-if="route?.fullPath === '/dashboard?services'"
+    v-if="route?.fullPath === '/dashboard?prestations'"
   >
-    <DashboardServicesDashboard :allDatas="allDatas?.data?.data" />
+    <DashboardServicesDashboard />
+  </div>
+  <div
+    class="flex h-full flex-wrap justify-center gap-5"
+    v-if="route?.fullPath === '/dashboard?reservations'"
+  >
+    <DashboardAppointmentsDashboard />
   </div>
 </template>
 <style lang="scss" scoped>
