@@ -3,6 +3,7 @@ import { useRouter } from "vue-router";
 const { logout } = useApi();
 const route = useRoute();
 const router = useRouter();
+const props = defineProps(["chipNumberAppointmentHolded"]);
 
 let mobileChecked = ref(false);
 
@@ -18,6 +19,8 @@ const user = ref({
   newPassword: null,
   newPasswordConfirmation: null,
 });
+
+const chipNumber = ref(0);
 
 const toggleNavMobile = () => {
   mobileChecked.value = false;
@@ -41,6 +44,13 @@ const handleLogout = async () => {
     }
   }
 };
+
+watch(
+  () => props.chipNumberAppointmentHolded,
+  (newVal) => {
+    chipNumber.value = newVal;
+  }
+);
 
 onMounted(() => {
   const tempUser = userStore.loadUserFromSession();
@@ -186,11 +196,14 @@ watch(
               </li>
               <UDivider />
               <li>
-                <NuxtLink
-                  to="/dashboard"
-                  :class="{ active: route.path.includes('/dashboard') }"
-                  >Dashboard</NuxtLink
-                >
+                <UChip :show="chipNumber > 0" :text="chipNumber" size="2xl">
+                  <NuxtLink
+                    to="/dashboard"
+                    class="mx-2"
+                    :class="{ active: route.path.includes('/dashboard') }"
+                    >Dashboard</NuxtLink
+                  >
+                </UChip>
               </li>
               <UDivider />
             </ul>
@@ -281,7 +294,7 @@ watch(
       align-items: center;
       flex-direction: column;
       justify-content: flex-start;
-      gap: 3rem;
+      gap: 4vh;
       width: 100%;
     }
   }

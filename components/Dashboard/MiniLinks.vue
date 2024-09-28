@@ -27,7 +27,7 @@ const emit = defineEmits(["updateDateRef", "updateStatusRef"]);
       <li
         :class="{ active: props.status === to }"
         :key="id"
-        class="cursor-pointer"
+        class="cursor-pointer mx-2"
         @click="emit('updateStatusRef', to)"
       >
         {{ name }}

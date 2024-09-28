@@ -1,30 +1,20 @@
 <script setup>
-const props = defineProps({
-  allDatas: Object,
+const allDatasStore = useAllDatasStore();
+const services = ref(null);
+
+allDatasStore.$subscribe((mutation, state) => {
+  services.value = state.allDatas.services.sort(
+    (a, b) => a.disabled - b.disabled
+  );
 });
 
-const services = ref(
-  props.allDatas?.services.sort((a, b) => a.disabled - b.disabled)
-);
-
-const checkId = (service, inputService) => {
-  return service.id === inputService.id;
-};
-
-const updateService = (inputService) => {
-  const indexService = services.value.findIndex((service) =>
-    checkId(service, inputService)
-  );
-  services.value[indexService] = inputService;
-};
+onMounted(async () => {
+  await allDatasStore.loadDatas();
+});
 
 const createServiceModal = ref(false);
 const closeCreateService = () => {
   createServiceModal.value = false;
-};
-
-const addNewService = (service) => {
-  services.value.push(service);
 };
 </script>
 
@@ -49,7 +39,7 @@ const addNewService = (service) => {
       Ajouter une prestation
     </UButton>
     <div v-for="service in services" :key="service.id">
-      <DashboardServiceCard :service="service" @updateService="updateService" />
+      <DashboardServiceCard :service="service" />
     </div>
   </div>
   <UDivider orientation="vertical" />

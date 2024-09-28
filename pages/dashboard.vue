@@ -1,36 +1,17 @@
 <script setup>
+import { corePlugins } from "#tailwind-config";
 import { useRoute } from "vue-router";
 definePageMeta({
   middleware: ["auth"],
 });
 
+const props = defineProps(["chipNumberAppointmentHolded"]);
+
 const route = useRoute();
 
-const allDatas = ref(null);
+const chipNumber = computed(() => props.chipNumberAppointmentHolded);
 
-const allDatasStore = useAllDatasStore();
-
-allDatasStore.$subscribe((mutation, state) => {
-  allDatas.value = state.allDatas;
-});
-
-const chipNumberHold = ref(0);
-
-const isFutureEvent = (endDate) => {
-  const endDateTime = new Date(endDate);
-  const currentTime = new Date();
-  return endDateTime > currentTime;
-};
-
-const updateChipNumberAppointments = () => {
-  const appointments = allDatas.value.appointments;
-  const filteredAppointments = appointments.filter(
-    (app) => app.status === "hold" && isFutureEvent(app.end_date)
-  );
-  chipNumberHold.value = filteredAppointments.length;
-};
-
-const links = ref([
+const links = computed(() => [
   {
     to: "/dashboard",
     fullpath: ["/dashboard"],
@@ -40,7 +21,7 @@ const links = ref([
     to: "?reservations",
     fullpath: ["/dashboard?reservations"],
     name: "Réservations",
-    chipNumber: chipNumberHold.value,
+    chipNumber: chipNumber.value,
   },
   {
     to: "?prestations",
@@ -49,31 +30,6 @@ const links = ref([
   },
   { to: "?clients", fullpath: ["/dashboard?clients"], name: "Clients" },
 ]);
-
-onMounted(async () => {
-  await allDatasStore.loadDatas();
-  allDatas.value = allDatasStore.allDatas;
-  updateChipNumberAppointments(allDatas);
-  links.value = [
-    {
-      to: "/dashboard",
-      fullpath: ["/dashboard"],
-      name: "Dashboard",
-    },
-    {
-      to: "?reservations",
-      fullpath: ["/dashboard?reservations"],
-      name: "Réservations",
-      chipNumber: chipNumberHold.value,
-    },
-    {
-      to: "?prestations",
-      fullpath: ["/dashboard?prestations"],
-      name: "Prestations",
-    },
-    { to: "?clients", fullpath: ["/dashboard?clients"], name: "Clients" },
-  ];
-});
 </script>
 
 <template>
@@ -95,7 +51,7 @@ onMounted(async () => {
     class="flex h-full flex-wrap justify-center gap-5"
     v-if="route?.fullPath === '/dashboard?reservations'"
   >
-    <DashboardAppointmentsDashboard />
+    <DashboardAppointmentsDashboard :chipNumberAppointmentHolded="chipNumber" />
   </div>
 </template>
 <style lang="scss" scoped>

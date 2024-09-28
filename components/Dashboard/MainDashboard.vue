@@ -84,7 +84,7 @@ onMounted(async () => {
 watch(
   () => date.value,
   async (newVal) => {
-    await waitForAllDatas();
+    await allDatasStore.loadDatas();
     if (newVal === "today") {
       const minDate = new Date();
       minDate.setHours("00", "00", "01");

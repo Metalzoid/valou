@@ -118,21 +118,22 @@ export default {
 
         if (response.success) {
           const datas = response.data.data;
+
           if (datas.length > 0) {
             return Promise.all(
               datas
-                .filter((data) => data.appointment.status === "accepted")
+                .filter((data) => data.status === "accepted")
                 .map(async (data) => ({
                   type: "appointment",
-                  id: data.appointment.id,
+                  id: data.id,
                   title: "Rendez-vous",
-                  start: new Date(data.appointment.start_date),
-                  end: new Date(data.appointment.end_date),
-                  price: data.appointment.price,
-                  comment: data.appointment.comment,
-                  seller_comment: data.appointment.seller_comment,
-                  status: data.appointment.status,
-                  customer_id: data.appointment.customer_id,
+                  start: new Date(data.start_date),
+                  end: new Date(data.end_date),
+                  price: data.price,
+                  comment: data.comment,
+                  seller_comment: data.seller_comment,
+                  status: data.status,
+                  customer_id: data.customer_id,
                   services: data.services,
                   borderColor: "0000FF",
                   color: "#4DBFF7",
@@ -223,6 +224,7 @@ export default {
           const availabilities = await getAvailabilities();
           const unavailabilities = await getUnavailabilities();
           const appointments = await getAppointments();
+
           const filteredUnavailabilities = unavailabilities.filter((obj1) => {
             return !appointments.some((obj2) => isDateRangeEqual(obj1, obj2));
           });

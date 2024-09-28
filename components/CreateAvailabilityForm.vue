@@ -1,6 +1,7 @@
 <script setup>
 const { postData } = useApi();
 const { $swal } = useNuxtApp();
+const allDatasStore = useAllDatasStore();
 
 const emit = defineEmits(["closeModal", "refetchEvents"]);
 
@@ -65,6 +66,7 @@ const onSubmit = async () => {
   const response = await postData("availabilities", formData);
 
   if (response.success) {
+    allDatasStore.updateDatas();
     $swal.fire({
       title: "Génial!",
       text: response.data.message,

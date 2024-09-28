@@ -113,19 +113,10 @@ const renderSubmit = (response) => {
     form.value.clear();
     closeModal();
   } else {
-    const errors = Object.entries(response.data.errors).map(
-      ([path, message]) => ({
-        path: path,
-        message: message.isArray() ? message[0] : message,
-      })
-    );
-    form.value.setErrors(errors);
-    errors.forEach((err) => {
-      $swal.fire({
-        title: "Une erreur est survenue!",
-        text: err.message,
-        icon: "error",
-      });
+    $swal.fire({
+      title: "Une erreur est survenue!",
+      text: response.data.errors,
+      icon: "error",
     });
   }
 };
@@ -214,7 +205,7 @@ watch(
         <UInput
           v-model="state.start_date"
           type="datetime-local"
-          :disabled="state.status === 'accepted'"
+          :disabled="props?.appointment?.appointment?.status === 'accepted'"
         />
       </UFormGroup>
 
@@ -222,7 +213,7 @@ watch(
         <UInput
           v-model="state.end_date"
           type="datetime-local"
-          :disabled="state.status === 'accepted'"
+          :disabled="props?.appointment?.appointment?.status === 'accepted'"
         />
       </UFormGroup>
     </div>
@@ -251,10 +242,18 @@ watch(
     </div>
 
     <UFormGroup label="Commentaire du client" name="comment" class="mt-3">
-      <UInput v-model="state.comment" type="text" required disabled />
+      <UTextarea v-model="state.comment" type="text" disabled />
     </UFormGroup>
 
-    <UFormGroup label="Votre commentaire" name="sellerComment" class="mt-3">
+    <UFormGroup
+      :label="
+        state.sellerComment
+          ? 'Modifier votre commentaire'
+          : 'Ajouter un commentaire'
+      "
+      name="sellerComment"
+      class="mt-3"
+    >
       <UTextarea
         v-model="state.sellerComment"
         class="mt-3 mb-10"
@@ -274,6 +273,14 @@ watch(
       />
     </UFormGroup>
 
+    <UFormGroup label="Prix" name="price" class="mt-5">
+      <UInput v-model="state.price" type="number" disabled>
+        <template #trailing>
+          <span class="text-gray-500 dark:text-gray-400 text-xs">EUR</span>
+        </template>
+      </UInput>
+    </UFormGroup>
+
     <UFormGroup label="Status" name="status" class="mt-3">
       <USelect
         class="my-5"
@@ -283,14 +290,6 @@ watch(
       />
     </UFormGroup>
 
-    <UFormGroup label="Prix" name="price" class="mt-5">
-      <UInput v-model="state.price" type="number" disabled>
-        <template #trailing>
-          <span class="text-gray-500 dark:text-gray-400 text-xs">EUR</span>
-        </template>
-      </UInput>
-    </UFormGroup>
-
-    <UButton type="submit" class="mt-5"> Submit </UButton>
+    <UButton type="submit" class="mt-5">Modifier</UButton>
   </UForm>
 </template>

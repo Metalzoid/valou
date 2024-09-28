@@ -1,6 +1,7 @@
 <script setup>
 const { deleteData, updateData, getUserByID } = useApi();
 const { $swal } = useNuxtApp();
+const allDatasStore = useAllDatasStore();
 
 const props = defineProps({
   eventsInfos: Object,
@@ -56,22 +57,24 @@ const closeModal = () => {
   emit("closeEvents");
 };
 
-const getUserInfos = async (id) => {
-  try {
-    const response = await getUserByID(id);
-    if (response.success) {
-      const user = response.data.data;
-      return {
-        user_id: user.id,
-        email: user.email,
-        firstname: user.firstname,
-        lastname: user.lastname,
-        company: user.company,
-        role: user.role,
-      };
+const getUserInfos = async (id, type) => {
+  if (type === "appointment") {
+    try {
+      const response = await getUserByID(id);
+      if (response.success) {
+        const user = response.data.data;
+        return {
+          user_id: user.id,
+          email: user.email,
+          firstname: user.firstname,
+          lastname: user.lastname,
+          company: user.company,
+          role: user.role,
+        };
+      }
+    } catch (error) {
+      console.error(error);
     }
-  } catch (error) {
-    console.log(error);
   }
 };
 
@@ -111,6 +114,7 @@ const updateAppointment = async () => {
       appointment
     );
     if (response.success) {
+      allDatasStore.updateDatas();
       await $swal.fire({
         title: "Génial !",
         text: "Mise à jour réussie.",
@@ -148,6 +152,7 @@ const updateAvailability = async () => {
   );
 
   if (response.success) {
+    allDatasStore.updateDatas();
     await $swal.fire({
       title: "Génial !",
       text: "Mise à jour réussie.",
@@ -180,13 +185,15 @@ watch(
         end: formatDate(newVal.event.end),
         available: newVal.event.extendedProps.available,
         status: newVal.event.extendedProps.status,
-        customer: await getUserInfos(newVal.event.extendedProps.customer_id),
+        customer: await getUserInfos(
+          newVal.event.extendedProps.customer_id,
+          newVal.event.extendedProps.type
+        ),
         price: newVal.event.extendedProps.price,
         comment: newVal.event.extendedProps.comment,
         seller_comment: newVal.event.extendedProps.seller_comment,
         services: newVal.event.extendedProps.services,
       };
-      console.log(newVal.event?.extendedProps.type);
 
       if (newVal?.event?.extendedProps.type === "appointment") {
         emit(

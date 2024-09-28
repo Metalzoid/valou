@@ -4,7 +4,6 @@ const { $swal } = useNuxtApp();
 const allDatasStore = useAllDatasStore();
 const props = defineProps({
   appointment: Object,
-  services: Object,
 });
 
 const updateAppointmentModal = ref(false);
@@ -33,31 +32,6 @@ const setAppointment = (data) => {
   appointment.value.status = data.appointment.status;
 };
 
-const toggleCard = ref(false);
-
-const updateAppointment = async (newStatus) => {
-  const appointment = {
-    appointment: {
-      status: newStatus,
-    },
-  };
-  const response = await updateData(
-    `appointments/${props.appointment.appointment.id}`,
-    appointment
-  );
-
-  console.log(response);
-
-  if (response.success) {
-    allDatasStore.updateDatas();
-    $swal.fire({
-      title: "Génial!",
-      text: `Réservation mise à jour avec succès.`,
-      icon: "success",
-    });
-  }
-};
-
 onMounted(() => {
   setAppointment(props.appointment);
 });
@@ -65,7 +39,6 @@ onMounted(() => {
 watch(
   () => props.appointment,
   (newVal) => {
-    toggleCard.value = false;
     setAppointment(newVal);
   }
 );
@@ -81,24 +54,23 @@ watch(
       @closeModal="closeAppointmentModal"
       method="update"
       :appointment="props.appointment"
-      :services="props.services"
+      :services="allDatasStore.allDatas.services"
     />
   </Modal>
-  <div class="cards flex items-center">
+  <div
+    class="cards flex items-center cursor-pointer"
+    @click="updateAppointmentModal = true"
+  >
     <div class="w-11/12 flex-col">
-      <div class="flex justify-between w-full items-start">
+      <div class="flex justify-between w-full items-center">
         <h1 class="font-mono text-3xl text-indigo-700">
           {{ appointment.user?.firstname }} {{ appointment?.user?.lastname }}
         </h1>
         <NuxtImg src="/img/profil-manquant.jpg" class="h-12 w-12" />
       </div>
-      <div class="w-full" v-if="appointment.comment">
-        <h4>Commentaire client:</h4>
-        <p>{{ appointment.comment }}</p>
-      </div>
       <UDivider />
       <div
-        class="flex justify-between w-full"
+        class="flex justify-between w-full mt-3"
         v-if="props?.appointment?.from === 'dashboard'"
       >
         <h5>
@@ -108,7 +80,7 @@ watch(
           {{ appointment?.maxTime?.toLocaleString() }}
         </h5>
       </div>
-      <div class="flex justify-between w-full" v-else>
+      <div class="flex justify-between w-full mt-3" v-else>
         <h5>
           {{ appointment?.minTime?.toLocaleTimeString().substring(0, 5) }}
           <font-awesome-icon
@@ -122,35 +94,6 @@ watch(
           {{ appointment?.minutes }} minutes
         </p>
         <p>{{ appointment?.user?.phone_number }}</p>
-      </div>
-    </div>
-    <div class="toggle">
-      <font-awesome-icon
-        :icon="['fas', 'chevron-right']"
-        size="2xl"
-        color="#B0B0B0"
-        @click="toggleCard = !toggleCard"
-      />
-    </div>
-    <div v-if="toggleCard" class="flex flex-col gap-3">
-      <div v-if="appointment.status === 'hold'">
-        <h3
-          class="text-green-700 cursor-pointer"
-          @click="updateAppointment('accepted')"
-        >
-          Accepter
-        </h3>
-        <h3
-          class="text-red-700 cursor-pointer"
-          @click="updateAppointment('refused')"
-        >
-          Refuser
-        </h3>
-      </div>
-      <div v-else>
-        <h3 class="cursor-pointer" @click="updateAppointmentModal = true">
-          Modifier
-        </h3>
       </div>
     </div>
   </div>

@@ -60,6 +60,7 @@ const onSubmit = async () => {
       firstname: currentUser.firstname,
       lastname: currentUser.lastname,
       company: currentUser.company,
+      phone_number: currentUser.phone_number,
       current_password: currentUser.currentPassword,
       ...(currentUser.newPassword && {
         password: currentUser.newPassword,

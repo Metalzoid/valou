@@ -6,6 +6,7 @@ import {
   startOfDay,
   isAfter,
   isBefore,
+  isFuture,
 } from "date-fns";
 import { DatePicker } from "v-calendar";
 import "v-calendar/dist/style.css";
@@ -13,17 +14,19 @@ import "v-calendar/dist/style.css";
 const allDatas = ref(null);
 const allDatasStore = useAllDatasStore();
 
+const props = defineProps(["chipNumberAppointmentHolded"]);
+
 allDatasStore.$subscribe((mutation, state) => {
   allDatas.value = state.allDatas;
 });
 
-const chipNumberHold = ref(0);
+const chipNumber = computed(() => props.chipNumberAppointmentHolded);
 
-const links = ref([
+const links = computed(() => [
   {
     to: "hold",
     name: "En attente",
-    chipNumber: chipNumberHold.value,
+    chipNumber: chipNumber.value,
   },
   {
     to: "accepted",
@@ -47,6 +50,7 @@ const ranges = [
   { label: "Prochains 6 mois", duration: { months: 6 } },
   { label: "Prochains 12 mois", duration: { months: 12 } },
 ];
+
 const selected = ref({ start: new Date(), end: add(new Date(), { days: 14 }) });
 
 const isRangeSelected = (duration) => {
@@ -62,78 +66,68 @@ const selectRange = (duration) => {
 
 const status = ref("accepted");
 
-const appointments = ref([]);
+const pastAppointments = ref([]);
+const futureAppointments = ref([]);
 
 const updateStatusRef = (newVal) => {
   status.value = newVal;
 };
 
-const defineAppointments = async (statusRef) => {
-  appointments.value = [];
-  chipNumberHold.value = 0;
-  allDatas.value.appointments.map((app) => {
-    if (app.status == "hold") {
-      chipNumberHold.value += 1;
-    }
-    if (app.status === statusRef && selected.value) {
-      if (
-        isAfter(new Date(app.start_date), startOfDay(selected.value.start)) &&
-        isBefore(new Date(app.end_date), startOfDay(selected.value.end))
-      ) {
-        const user = allDatas.value?.customers.find(
-          (user) => user.id === app.customer_id
-        );
-        const appointment = {
-          appointment: app,
-          user: user,
-          from: "dashboard",
-        };
-        appointments.value.push(appointment);
-      } else {
-        return [];
+const defineAppointments = async (statusRef, datas) => {
+  futureAppointments.value = [];
+  pastAppointments.value = [];
+
+  if (datas) {
+    datas.appointments.forEach((app) => {
+      if (app.status === statusRef && selected.value) {
+        const appStartDate = new Date(app.start_date);
+        const appEndDate = new Date(app.end_date);
+
+        if (
+          isAfter(appStartDate, startOfDay(selected.value.start)) &&
+          isBefore(appEndDate, startOfDay(selected.value.end))
+        ) {
+          const user = allDatas.value?.customers.find(
+            (user) => user.id === app.customer_id
+          );
+
+          const appointment = {
+            appointment: app,
+            user: user,
+            from: "dashboard",
+          };
+
+          if (isFuture(appStartDate)) {
+            futureAppointments.value.push(appointment);
+          } else {
+            pastAppointments.value.push(appointment);
+          }
+        }
       }
-    } else {
-      return [];
-    }
-  });
+    });
+
+    futureAppointments.value.sort(
+      (a, b) =>
+        new Date(a.appointment.start_date) - new Date(b.appointment.start_date)
+    );
+
+    pastAppointments.value.sort(
+      (a, b) =>
+        new Date(a.appointment.start_date) - new Date(b.appointment.start_date)
+    );
+  }
 };
 
-onMounted(async () => {
-  await allDatasStore.loadDatas();
-  allDatas.value = allDatasStore.allDatas;
-  defineAppointments(status.value);
+onMounted(() => {
+  allDatasStore.loadDatas();
 });
 
 watch(
-  () => allDatas.value,
-  () => {
-    defineAppointments(status.value);
-  }
-);
-
-watch(
-  () => status.value,
-  (newVal) => {
-    defineAppointments(newVal);
-  }
-);
-
-watch(
-  () => selected.value,
-  () => {
-    defineAppointments(status.value);
-  }
-);
-
-watch(
-  () => chipNumberHold.value,
-  (newValue) => {
-    links.value = links.value.map((link) => {
-      if (link.to === "hold") {
-        return { ...link, chipNumber: newValue };
-      }
-      return link;
-    });
+  [() => allDatas.value, () => status.value, () => selected.value],
+  ([newAllDatas, newStatus]) => {
+    if (newAllDatas) {
+      defineAppointments(newStatus, newAllDatas);
+    }
   }
 );
 </script>
@@ -175,19 +169,32 @@ watch(
       :links="links"
       @updateStatusRef="updateStatusRef"
     />
-
+    <UDivider label="Passé" class="mt-5" v-if="pastAppointments.length > 0" />
     <div
-      v-for="appointment in appointments"
-      v-if="appointments.length > 0"
+      v-for="appointment in pastAppointments"
+      v-if="pastAppointments.length > 0"
       :key="appointment.id"
       class="mt-5"
     >
-      <DashboardAppointmentCard
-        :appointment="appointment"
-        :services="allDatas?.services"
-      />
+      <DashboardAppointmentCard :appointment="appointment" />
     </div>
-    <h3 class="mt-5 text-center text-xl w-full" v-if="appointments.length == 0">
+    <UDivider
+      label="À venir"
+      class="mt-5"
+      v-if="futureAppointments.length > 0"
+    />
+    <div
+      v-for="appointment in futureAppointments"
+      v-if="futureAppointments.length > 0"
+      :key="appointment.id"
+      class="mt-5"
+    >
+      <DashboardAppointmentCard :appointment="appointment" />
+    </div>
+    <h3
+      class="mt-5 text-center text-xl w-full"
+      v-if="futureAppointments.length + pastAppointments.length === 0"
+    >
       Pas de rendez-vous dans la période sélectionnée!
     </h3>
   </div>

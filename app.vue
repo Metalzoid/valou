@@ -1,17 +1,41 @@
 <script setup>
-onMounted(() => {
-  const userStore = useUserStore();
+const allDatasStore = useAllDatasStore();
+const userStore = useUserStore();
+
+const allDatas = ref(null);
+const chipNumberAppointmentHolded = ref(0);
+
+allDatasStore.$subscribe((mutation, state) => {
+  allDatas.value = state.allDatas;
+  defineChipNumber();
+});
+
+const defineChipNumber = () => {
+  chipNumberAppointmentHolded.value = 0;
+  if (!allDatas.value) return;
+  allDatas.value.appointments?.forEach((appointment) => {
+    if (appointment.status === "hold") {
+      chipNumberAppointmentHolded.value += 1;
+    }
+  });
+};
+
+onMounted(async () => {
   if (userStore.currentUser) {
-    const allDatasStore = useAllDatasStore();
-    allDatasStore.updateDatas();
+    try {
+      await allDatasStore.updateDatas();
+      allDatas.value = allDatasStore.allDatas;
+    } catch (error) {
+      console.error("Failed to update data:", error);
+    }
   }
 });
 </script>
 
 <template>
   <div class="text-black">
-    <Navbar />
-    <NuxtPage />
+    <Navbar :chipNumberAppointmentHolded="chipNumberAppointmentHolded" />
+    <NuxtPage :chipNumberAppointmentHolded="chipNumberAppointmentHolded" />
     <UModals />
   </div>
 </template>

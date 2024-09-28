@@ -1,18 +1,13 @@
 <script setup>
 const { $swal } = useNuxtApp();
-
 const { updateData } = useApi();
+const allDatasStore = useAllDatasStore();
+
 const props = defineProps({
   service: Object,
 });
 
-const emit = defineEmits(["updateService"]);
-
-const updateService = (service) => {
-  emit("updateService", service);
-};
-
-const disabled = ref(props.service?.disabled);
+const service = computed(() => props.service);
 
 const updateServiceModal = ref(false);
 
@@ -23,13 +18,13 @@ const closeUpdateService = () => {
 const updateStatusService = async () => {
   let formData = {
     service: {
-      disabled: !disabled.value,
+      disabled: !service.value.disabled,
     },
   };
-  const response = await updateData(`services/${props.service?.id}`, formData);
+  const response = await updateData(`services/${service.value?.id}`, formData);
 
   if (response.success) {
-    disabled.value = !disabled.value;
+    allDatasStore.updateDatas();
     $swal.fire({
       title: "Génial!",
       text: "Status mis à jour.",
@@ -53,15 +48,14 @@ const updateStatusService = async () => {
   >
     <DashboardServiceForm
       @closeModal="closeUpdateService"
-      @updateService="updateService"
       method="update"
-      :service="props.service"
+      :service="service"
     />
   </Modal>
   <div class="card">
     <div class="flex justify-between w-full items-start">
       <h1 class="font-mono text-3xl text-indigo-700">
-        {{ props.service?.title }}
+        {{ service.title }}
       </h1>
       <font-awesome-icon
         :icon="['fas', 'pen']"
@@ -73,19 +67,19 @@ const updateStatusService = async () => {
     <div class="flex justify-between w-full">
       <p>
         <font-awesome-icon :icon="['fas', 'clock']" style="color: #a9a9a9" />
-        {{ props.service?.time }} minutes
+        {{ service?.time }} minutes
       </p>
       <div class="flex gap-8 items-center">
-        <p>{{ props.service?.price }} €</p>
+        <p>{{ service?.price }} €</p>
         <UPopover mode="hover">
           <font-awesome-icon
-            v-if="disabled"
+            v-if="service?.disabled"
             :icon="['fas', 'circle-xmark']"
             style="color: red"
             @click="updateStatusService"
           />
           <font-awesome-icon
-            v-if="!disabled"
+            v-if="!service?.disabled"
             :icon="['fas', 'circle-check']"
             style="color: green"
             @click="updateStatusService"
