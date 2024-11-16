@@ -25,6 +25,7 @@ export default defineNuxtConfig({
     public: {
       ADMIN_API_KEY: process.env.ADMIN_API_KEY,
       apiBase: process.env.API_BASE_URL,
+      cableBase: process.env.API_CABLE_URL,
     },
   },
   build: {

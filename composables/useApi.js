@@ -1,13 +1,19 @@
 import { useCookie } from "#app";
+import { useWebSocket } from "@vueuse/core";
 
 export default function useApi() {
   let tokenExpirationTimer = null;
   const config = useRuntimeConfig();
   const apiBase = config.public.apiBase;
+  const cableBase = config.public.cableBase;
   const cookie = useCookie("jwt_token");
   const cookieUserId = useCookie("user.id");
   const userStore = useUserStore();
   const allDatasStore = useAllDatasStore();
+  const { status, data, send, open, close } = useWebSocket(cableBase, {
+    immediate: false,
+    autoReconnect: false,
+  });
 
   const setTokenExpirationTimer = (tokenExpiry) => {
     clearTokenExpirationTimer();
@@ -315,34 +321,33 @@ export default function useApi() {
 
   const webSocket = () => {
     try {
-      const ws = new WebSocket("wss://datescalendar.fr/cable");
-
-      ws.onopen = () => {
+      // Check websocket status && currentUser Connected
+      if (
+        !["OPEN", "CONNECTING"].includes(status) &&
+        userStore.currentUser !== null
+      ) {
+        // Open connection && subscribe channel
+        open();
         const message = {
           command: "subscribe",
           identifier: JSON.stringify({ channel: "AllDatasChannel" }),
         };
-
-        ws.send(JSON.stringify(message));
-      };
-
-      ws.onmessage = (e) => {
-        const data = JSON.parse(e.data);
-
-        if (typeof data.message === "object") {
-          allDatasStore.saveDatas(data.message);
-        }
-      };
-
-      // Gestion d'erreur
-      ws.onerror = (error) => {
-        console.error("Erreur WebSocket:", error);
-        reject({
-          success: false,
-          message: "WebSocket error",
-          error: error,
+        send(JSON.stringify(message));
+        // Watch new datas from websocket
+        watch(data, (newData) => {
+          const datas = JSON.parse(newData);
+          if (typeof datas.message === "object") {
+            allDatasStore.saveDatas(datas.message);
+            console.log(datas.message);
+          }
         });
-      };
+      }
+      // Watch currentUser connection and disconnect websocket
+      userStore.$subscribe((mutation, state) => {
+        if (state.currentUser === null) {
+          close();
+        }
+      });
     } catch (err) {
       console.error(err);
     }
