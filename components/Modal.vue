@@ -12,7 +12,7 @@ const emit = defineEmits(["update:isOpen"]);
 </script>
 
 <template>
-  <UModal :modelValue="isOpen" prevent-close>
+  <UModal :modelValue="isOpen">
     <UCard
       :ui="{
         ring: '',

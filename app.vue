@@ -1,4 +1,6 @@
 <script setup>
+import { compareAsc } from "date-fns";
+const { webSocket } = useApi();
 const allDatasStore = useAllDatasStore();
 const userStore = useUserStore();
 
@@ -14,22 +16,26 @@ const defineChipNumber = () => {
   chipNumberAppointmentHolded.value = 0;
   if (!allDatas.value) return;
   allDatas.value.appointments?.forEach((appointment) => {
-    if (appointment.status === "hold") {
+    // If appointment status is hold && Appointment.start_date > Now, set chipNumber +1
+    if (
+      appointment.status === "hold" &&
+      compareAsc(new Date(appointment.start_date), new Date()) === 1
+    ) {
       chipNumberAppointmentHolded.value += 1;
     }
   });
 };
 
-onMounted(async () => {
-  if (userStore.currentUser) {
+watch(
+  () => userStore.currentUser,
+  () => {
     try {
-      await allDatasStore.updateDatas();
-      allDatas.value = allDatasStore.allDatas;
+      webSocket();
     } catch (error) {
       console.error("Failed to update data:", error);
     }
   }
-});
+);
 </script>
 
 <template>

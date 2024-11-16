@@ -1,15 +1,23 @@
 <script setup>
 const allDatasStore = useAllDatasStore();
 const services = ref(null);
+const servicesForCharts = ref({});
 
 allDatasStore.$subscribe((mutation, state) => {
   services.value = state.allDatas.services.sort(
     (a, b) => a.disabled - b.disabled
   );
-});
-
-onMounted(async () => {
-  await allDatasStore.loadDatas();
+  servicesForCharts.value = {};
+  state.allDatas.appointments.forEach((appointment) => {
+    if (appointment.status === "finished") {
+      appointment.services.forEach((service) => {
+        if (!servicesForCharts.value[service.title]) {
+          servicesForCharts.value[service.title] = 0;
+        }
+        servicesForCharts.value[service.title] += 1;
+      });
+    }
+  });
 });
 
 const createServiceModal = ref(false);
@@ -51,8 +59,9 @@ const closeCreateService = () => {
       <UDivider />
     </div>
     <div class="flex w-100 justify-around mt-3">
-      <DashboardMiniCard title="Aujourd'hui" />
-      <DashboardMiniCard title="7 prochains jours" />
+      <!-- <DashboardMiniCard title="Aujourd'hui" />
+      <DashboardMiniCard title="7 prochains jours" /> -->
+      <BarChart :services="servicesForCharts" />
     </div>
   </div>
 </template>

@@ -39,12 +39,12 @@ const defineAppointments = async (minDate, maxDate) => {
         new Date(app.start_date) > minDate &&
         new Date(app.end_date) < maxDate
       ) {
-        const user = allDatas.value?.customers.find(
+        const customer = allDatas.value?.customers.find(
           (user) => user.id === app.customer_id
         );
         const appointment = {
           appointment: app,
-          user: user,
+          customer: customer,
         };
         appointments.value.push(appointment);
       }
@@ -67,24 +67,27 @@ const defineAppointmentsNumber = async (minDate, maxDate, destination) => {
   });
 };
 
-onMounted(async () => {
-  await allDatasStore.loadDatas();
+onMounted(() => {
   allDatas.value = allDatasStore.allDatas;
-  const minDate = new Date();
-  minDate.setHours("00", "00", "01");
-  const maxDate = new Date();
-  maxDate.setHours("23", "59", "59");
-  defineAppointments(minDate, maxDate);
-  defineAppointmentsNumber(minDate, maxDate, today);
-  minDate.setDate(minDate.getDate() + 1);
-  maxDate.setDate(maxDate.getDate() + 7);
-  defineAppointmentsNumber(minDate, maxDate, thisWeek);
+  const interval = setInterval(() => {
+    if (allDatas.value !== null) {
+      clearInterval(interval);
+      const minDate = new Date();
+      minDate.setHours("00", "00", "01");
+      const maxDate = new Date();
+      maxDate.setHours("23", "59", "59");
+      defineAppointments(minDate, maxDate);
+      defineAppointmentsNumber(minDate, maxDate, today);
+      minDate.setDate(minDate.getDate() + 1);
+      maxDate.setDate(maxDate.getDate() + 7);
+      defineAppointmentsNumber(minDate, maxDate, thisWeek);
+    }
+  }, 100);
 });
 
 watch(
   () => date.value,
   async (newVal) => {
-    await allDatasStore.loadDatas();
     if (newVal === "today") {
       const minDate = new Date();
       minDate.setHours("00", "00", "01");
@@ -141,8 +144,16 @@ watch(
       <UDivider />
     </div>
     <div class="flex w-100 justify-around mt-3 flex-wrap gap-5">
-      <DashboardMiniCard title="Aujourd'hui" :content="today" />
-      <DashboardMiniCard title="7 prochains jours" :content="thisWeek" />
+      <DashboardMiniCard
+        title="Aujourd'hui"
+        :content="today"
+        @click="goToAppoinments('today')"
+      />
+      <DashboardMiniCard
+        title="7 prochains jours"
+        :content="thisWeek"
+        @navigate="goToAppoinments('sevenDays')"
+      />
     </div>
   </div>
 </template>

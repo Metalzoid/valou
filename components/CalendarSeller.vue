@@ -6,14 +6,13 @@ import timeGridPlugin from "@fullcalendar/timegrid";
 import frLocale from "@fullcalendar/core/locales/fr";
 import VueDatePicker from "@vuepic/vue-datepicker";
 import "@vuepic/vue-datepicker/dist/main.css";
-import { useLoadingIndicator } from "#app/composables/loading-indicator";
 export default {
   components: {
     FullCalendar,
     VueDatePicker,
   },
   setup() {
-    const { getData, getUserByID, updateData } = useApi();
+    const { getData, } = useApi();
     const user = ref(null);
     const createAvailabilityModal = ref(false);
     const infosEventsModal = ref(false);
@@ -122,7 +121,9 @@ export default {
           if (datas.length > 0) {
             return Promise.all(
               datas
-                .filter((data) => data.status === "accepted")
+                .filter((data) =>
+                  [("accepted", "finished")].includes(data.status)
+                )
                 .map(async (data) => ({
                   type: "appointment",
                   id: data.id,

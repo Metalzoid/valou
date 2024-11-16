@@ -1,8 +1,7 @@
 <script setup>
-import { format } from "date-fns";
+import { format, isPast } from "date-fns";
 const { updateData } = useApi();
 const { $swal } = useNuxtApp();
-const allDatasStore = useAllDatasStore();
 
 const emit = defineEmits(["closeModal"]);
 
@@ -17,6 +16,8 @@ const props = defineProps({
 
 const statusOptions = ref([]);
 
+const disabledButton = ref(true);
+
 const defineStatusOptions = (status) => {
   statusOptions.value = [];
   if (status === "accepted") {
@@ -26,8 +27,20 @@ const defineStatusOptions = (status) => {
         value: "accepted",
       },
       {
+        name: "Finaliser ?",
+        value: "finished",
+      },
+      {
         name: "Annuler ?",
         value: "canceled",
+      },
+      {
+        name: "Refuser ?",
+        value: "refused",
+      },
+      {
+        name: "En attente",
+        value: "hold",
       },
     ];
   } else if (status === "refused") {
@@ -35,6 +48,14 @@ const defineStatusOptions = (status) => {
       {
         name: "Accepter ?",
         value: "accepted",
+      },
+      {
+        name: "Finaliser ?",
+        value: "finished",
+      },
+      {
+        name: "Annuler ?",
+        value: "canceled",
       },
       {
         name: "Refusé",
@@ -52,7 +73,15 @@ const defineStatusOptions = (status) => {
         value: "accepted",
       },
       {
-        name: "Refuser",
+        name: "Finaliser ?",
+        value: "finished",
+      },
+      {
+        name: "Annuler ?",
+        value: "canceled",
+      },
+      {
+        name: "Refuser ?",
         value: "refused",
       },
       {
@@ -67,12 +96,43 @@ const defineStatusOptions = (status) => {
         value: "accepted",
       },
       {
-        name: "En attente",
-        value: "hold",
+        name: "Finaliser ?",
+        value: "finished",
       },
       {
         name: "Annulé",
         value: "canceled",
+      },
+      {
+        name: "Refuser ?",
+        value: "refused",
+      },
+      {
+        name: "En attente",
+        value: "hold",
+      },
+    ];
+  } else if (status === "finished") {
+    statusOptions.value = [
+      {
+        name: "Accepter ?",
+        value: "accepted",
+      },
+      {
+        name: "Finalisé",
+        value: "finished",
+      },
+      {
+        name: "Annuler ?",
+        value: "canceled",
+      },
+      {
+        name: "Refuser ?",
+        value: "refused",
+      },
+      {
+        name: "En attente",
+        value: "hold",
       },
     ];
   }
@@ -109,8 +169,9 @@ const renderSubmit = (response) => {
       text: "Prestation mise à jour avec succès",
       icon: "success",
     });
-    allDatasStore.updateDatas();
-    form.value.clear();
+    if (form.value === null) {
+      form.value.clear();
+    }
     closeModal();
   } else {
     $swal.fire({
@@ -188,7 +249,10 @@ watch(
     newVal.appointment.services.forEach((service) => {
       selected.value.push(service.id);
     });
+
     defineStatusOptions(newVal.appointment.status);
+    disabledButton.value =
+      isPast(state.start_date) && newVal.appointment.status !== "hold";
   },
   { immediate: true }
 );
@@ -196,6 +260,9 @@ watch(
 
 <template>
   <UForm ref="form" :state="state" @submit="onSubmit">
+    <h3 v-if="disabledButton" class="text-red-700 underline">
+      Vous ne pouvez pas modifier un évènement qui à déjà débuté.
+    </h3>
     <div class="flex w-full justify-between">
       <UFormGroup
         label="Début de la prestation"
@@ -290,6 +357,8 @@ watch(
       />
     </UFormGroup>
 
-    <UButton type="submit" class="mt-5">Modifier</UButton>
+    <UButton type="submit" class="mt-5" :disabled="disabledButton"
+      >Modifier</UButton
+    >
   </UForm>
 </template>

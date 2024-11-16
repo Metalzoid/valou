@@ -47,4 +47,9 @@ export default defineNuxtConfig({
       "composables/**",
     ],
   },
+  nitro: {
+    experimental: {
+      websocket: true,
+    },
+  },
 });

@@ -5,7 +5,9 @@ export default function useApi() {
   const config = useRuntimeConfig();
   const apiBase = config.public.apiBase;
   const cookie = useCookie("jwt_token");
+  const cookieUserId = useCookie("user.id");
   const userStore = useUserStore();
+  const allDatasStore = useAllDatasStore();
 
   const setTokenExpirationTimer = (tokenExpiry) => {
     clearTokenExpirationTimer();
@@ -40,7 +42,9 @@ export default function useApi() {
           Accept: "application/json",
         },
         body: JSON.stringify({ user: { email, password } }),
+        credentials: "include",
       });
+
       const serialized_response = await response.json();
 
       if (!response.ok) {
@@ -59,7 +63,7 @@ export default function useApi() {
       if (authHeader) {
         const token = authHeader.split(" ")[1];
         const now = new Date();
-        const minutes = 60 * 60 * 1000; // 30 minutes in milliseconds
+        const minutes = 60 * 60 * 1000; // 60 minutes in milliseconds
         const tokenExpiry = new Date(now.getTime() + minutes);
         const cookie = useCookie("jwt_token", {
           expires: tokenExpiry,
@@ -90,6 +94,7 @@ export default function useApi() {
             Accept: "application/json",
             Authorization: `Bearer ${cookie.value}`,
           },
+          credentials: "include",
         });
 
         if (response.ok) {
@@ -163,6 +168,7 @@ export default function useApi() {
             Accept: "application/json",
             Authorization: `Bearer ${cookie.value}`,
           },
+          credentials: "include",
         });
 
         const data = await response.json();
@@ -199,6 +205,7 @@ export default function useApi() {
           Authorization: `Bearer ${cookie.value}`,
         },
         body: JSON.stringify(query),
+        credentials: "include",
       });
 
       const data = await response.json();
@@ -230,6 +237,7 @@ export default function useApi() {
           Authorization: `Bearer ${cookie.value}`,
         },
         body: JSON.stringify(query),
+        credentials: "include",
       });
 
       const data = await response.json();
@@ -260,6 +268,7 @@ export default function useApi() {
           Accept: "application/json",
           Authorization: `Bearer ${cookie.value}`,
         },
+        credentials: "include",
       });
 
       const data = await response.json();
@@ -289,6 +298,7 @@ export default function useApi() {
           Accept: "application/json",
           Authorization: `Bearer ${cookie.value}`,
         },
+        credentials: "include",
       });
 
       const data = await response.json();
@@ -303,6 +313,41 @@ export default function useApi() {
     }
   };
 
+  const webSocket = () => {
+    try {
+      const ws = new WebSocket("wss://datescalendar.fr/cable");
+
+      ws.onopen = () => {
+        const message = {
+          command: "subscribe",
+          identifier: JSON.stringify({ channel: "AllDatasChannel" }),
+        };
+
+        ws.send(JSON.stringify(message));
+      };
+
+      ws.onmessage = (e) => {
+        const data = JSON.parse(e.data);
+
+        if (typeof data.message === "object") {
+          allDatasStore.saveDatas(data.message);
+        }
+      };
+
+      // Gestion d'erreur
+      ws.onerror = (error) => {
+        console.error("Erreur WebSocket:", error);
+        reject({
+          success: false,
+          message: "WebSocket error",
+          error: error,
+        });
+      };
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   return {
     login,
     logout,
@@ -312,5 +357,6 @@ export default function useApi() {
     updateData,
     deleteData,
     getUserByID,
+    webSocket,
   };
 }

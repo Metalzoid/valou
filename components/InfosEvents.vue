@@ -114,7 +114,6 @@ const updateAppointment = async () => {
       appointment
     );
     if (response.success) {
-      allDatasStore.updateDatas();
       await $swal.fire({
         title: "Génial !",
         text: "Mise à jour réussie.",
@@ -152,7 +151,6 @@ const updateAvailability = async () => {
   );
 
   if (response.success) {
-    allDatasStore.updateDatas();
     await $swal.fire({
       title: "Génial !",
       text: "Mise à jour réussie.",

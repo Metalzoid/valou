@@ -66,7 +66,6 @@ const onSubmit = async () => {
   const response = await postData("availabilities", formData);
 
   if (response.success) {
-    allDatasStore.updateDatas();
     $swal.fire({
       title: "Génial!",
       text: response.data.message,

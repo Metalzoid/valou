@@ -16,7 +16,7 @@ const appointment = ref({
   minTime: null,
   maxTime: null,
   minutes: null,
-  user: null,
+  customer: null,
   comment: null,
   status: null,
 });
@@ -27,7 +27,7 @@ const setAppointment = (data) => {
   const maxTime = new Date(data.appointment.end_date);
   appointment.value.maxTime = maxTime;
   appointment.value.minutes = (maxTime - minTime) / 60000;
-  appointment.value.user = data.user;
+  appointment.value.customer = data.customer;
   appointment.value.comment = data.appointment.comment;
   appointment.value.status = data.appointment.status;
 };
@@ -47,7 +47,10 @@ watch(
 <template>
   <Modal
     :isOpen="updateAppointmentModal"
-    :title="`Rendez-vous avec ${appointment?.user?.firstname} ${appointment?.user?.lastname}`"
+    :title="`Rendez-vous avec ${
+      appointment?.customer?.company ||
+      appointment?.customer?.firstname + ' ' + appointment?.customer?.lastname
+    }`"
     @update:isOpen="(value) => (updateAppointmentModal = value)"
   >
     <DashboardAppointmentForm
@@ -64,7 +67,12 @@ watch(
     <div class="w-11/12 flex-col">
       <div class="flex justify-between w-full items-center">
         <h1 class="font-mono text-3xl text-indigo-700">
-          {{ appointment.user?.firstname }} {{ appointment?.user?.lastname }}
+          {{
+            appointment?.customer?.company ||
+            appointment?.customer?.firstname +
+              " " +
+              appointment?.customer?.lastname
+          }}
         </h1>
         <NuxtImg src="/img/profil-manquant.jpg" class="h-12 w-12" />
       </div>
@@ -93,7 +101,7 @@ watch(
           <font-awesome-icon :icon="['fas', 'clock']" style="color: #c9c9c9" />
           {{ appointment?.minutes }} minutes
         </p>
-        <p>{{ appointment?.user?.phone_number }}</p>
+        <p>{{ appointment?.customer?.phone_number }}</p>
       </div>
     </div>
   </div>

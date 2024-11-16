@@ -24,7 +24,6 @@ const updateStatusService = async () => {
   const response = await updateData(`services/${service.value?.id}`, formData);
 
   if (response.success) {
-    allDatasStore.updateDatas();
     $swal.fire({
       title: "Génial!",
       text: "Status mis à jour.",

@@ -53,6 +53,12 @@ const links = computed(() => [
   >
     <DashboardAppointmentsDashboard :chipNumberAppointmentHolded="chipNumber" />
   </div>
+  <div
+    class="flex h-full flex-wrap justify-center gap-5"
+    v-if="route?.fullPath === '/dashboard?clients'"
+  >
+    <DashboardCustomersDashboard />
+  </div>
 </template>
 <style lang="scss" scoped>
 #mainDashboard {

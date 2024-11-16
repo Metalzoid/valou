@@ -14,13 +14,11 @@ import "v-calendar/dist/style.css";
 const allDatas = ref(null);
 const allDatasStore = useAllDatasStore();
 
-const props = defineProps(["chipNumberAppointmentHolded"]);
+const chipNumber = ref(0);
 
 allDatasStore.$subscribe((mutation, state) => {
   allDatas.value = state.allDatas;
 });
-
-const chipNumber = computed(() => props.chipNumberAppointmentHolded);
 
 const links = computed(() => [
   {
@@ -31,6 +29,10 @@ const links = computed(() => [
   {
     to: "accepted",
     name: "Accepté",
+  },
+  {
+    to: "finished",
+    name: "Finalisé",
   },
   {
     to: "refused",
@@ -78,30 +80,34 @@ const defineAppointments = async (statusRef, datas) => {
   pastAppointments.value = [];
 
   if (datas) {
+    chipNumber.value = 0;
     datas.appointments.forEach((app) => {
-      if (app.status === statusRef && selected.value) {
-        const appStartDate = new Date(app.start_date);
-        const appEndDate = new Date(app.end_date);
-
-        if (
-          isAfter(appStartDate, startOfDay(selected.value.start)) &&
-          isBefore(appEndDate, startOfDay(selected.value.end))
-        ) {
-          const user = allDatas.value?.customers.find(
+      const appStartDate = new Date(app.start_date);
+      const appEndDate = new Date(app.end_date);
+      if (
+        isAfter(appStartDate, startOfDay(selected.value.start)) &&
+        isBefore(appEndDate, startOfDay(selected.value.end))
+      ) {
+        if (app.status === statusRef && selected.value) {
+          const customer = allDatas.value?.customers.find(
             (user) => user.id === app.customer_id
           );
 
           const appointment = {
             appointment: app,
-            user: user,
+            customer: customer,
             from: "dashboard",
           };
 
-          if (isFuture(appStartDate)) {
+          if (isFuture(appEndDate)) {
             futureAppointments.value.push(appointment);
           } else {
             pastAppointments.value.push(appointment);
           }
+        }
+
+        if (app.status === "hold") {
+          chipNumber.value += 1;
         }
       }
     });
@@ -117,10 +123,6 @@ const defineAppointments = async (statusRef, datas) => {
     );
   }
 };
-
-onMounted(() => {
-  allDatasStore.loadDatas();
-});
 
 watch(
   [() => allDatas.value, () => status.value, () => selected.value],
