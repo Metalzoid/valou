@@ -12,7 +12,9 @@ export default {
     VueDatePicker,
   },
   setup() {
-    const { getData, } = useApi();
+    const { getData } = useApi();
+    const allDatasStore = useAllDatasStore();
+    const allDatas = ref({});
     const user = ref(null);
     const createAvailabilityModal = ref(false);
     const infosEventsModal = ref(false);
@@ -20,6 +22,10 @@ export default {
     const eventsInfos = ref(null);
     const selectedDates = ref(null);
     const modalTitleEvents = ref("");
+    const availabilities = ref([]);
+    const unavailabilities = ref([]);
+    const appointments = ref([]);
+    const filteredUnavailabilities = ref([]);
 
     const handleModalTitle = (title) => {
       modalTitleEvents.value = title;
@@ -43,118 +49,6 @@ export default {
       return (end - start) / 60000 > 5;
     };
 
-    const getAvailabilities = async () => {
-      try {
-        const response = await getData(`availabilities`);
-        if (response.success) {
-          const dates = response.data.data.availabilities;
-
-          return dates.length > 0
-            ? dates.map((date) => {
-                if (minDuration(date.start_date, date.end_date)) {
-                  return {
-                    type: "availability",
-                    title: "Disponible",
-                    start: new Date(date.start_date),
-                    end: new Date(date.end_date),
-                    available: date.available,
-                    id: date.id,
-                    color: "#EEFFEE",
-                    borderColor: "#66CC00",
-                    textColor: "black",
-                  };
-                } else {
-                  return {};
-                }
-              })
-            : [];
-        } else {
-          return [];
-        }
-      } catch (error) {
-        if (error.response && error.response.status === 404) {
-          return [];
-        } else {
-          throw error;
-        }
-      }
-    };
-
-    const getUnavailabilities = async () => {
-      try {
-        const response = await getData(`availabilities?available=false`);
-        if (response.success) {
-          const dates = response.data.data.availabilities;
-
-          return dates.length > 0
-            ? dates.map((date) => ({
-                type: "unavailability",
-                title: "INDISPO",
-                start: new Date(date.start_date),
-                end: new Date(date.end_date),
-                available: date.available,
-                id: date.id,
-                color: "#FC5C5C",
-                borderColor: "#FF0000",
-                textColor: "black",
-              }))
-            : [];
-        } else {
-          return [];
-        }
-      } catch (error) {
-        if (error.response && error.response.status === 404) {
-          return [];
-        } else {
-          throw error;
-        }
-      }
-    };
-
-    const getAppointments = async () => {
-      try {
-        const response = await getData(`appointments`);
-
-        if (response.success) {
-          const datas = response.data.data;
-
-          if (datas.length > 0) {
-            return Promise.all(
-              datas
-                .filter((data) =>
-                  [("accepted", "finished")].includes(data.status)
-                )
-                .map(async (data) => ({
-                  type: "appointment",
-                  id: data.id,
-                  title: "Rendez-vous",
-                  start: new Date(data.start_date),
-                  end: new Date(data.end_date),
-                  price: data.price,
-                  comment: data.comment,
-                  seller_comment: data.seller_comment,
-                  status: data.status,
-                  customer_id: data.customer_id,
-                  services: data.services,
-                  borderColor: "0000FF",
-                  color: "#4DBFF7",
-                }))
-            );
-          } else {
-            return [];
-          }
-        } else {
-          return [];
-        }
-      } catch (error) {
-        if (error.response && error.response.status === 404) {
-          return [];
-        } else {
-          throw error;
-        }
-      }
-    };
-
     const closeCreateAvailability = () => {
       createAvailabilityModal.value = false;
     };
@@ -169,7 +63,12 @@ export default {
 
     const refetchEvents = () => {
       if (calendarRef.value) {
-        calendarRef.value.getApi().refetchEvents();
+        const eventsSources = calendarRef.value.getApi().getEventSources();
+        if (eventsSources.length > 0) {
+          eventsSources.forEach((event) => {
+            event.remove();
+          });
+        }
       }
     };
 
@@ -220,26 +119,6 @@ export default {
       selectable: true,
       selectMirror: true,
       selectOverlap: false,
-      events: async (info, successCallback, failureCallback) => {
-        try {
-          const availabilities = await getAvailabilities();
-          const unavailabilities = await getUnavailabilities();
-          const appointments = await getAppointments();
-
-          const filteredUnavailabilities = unavailabilities.filter((obj1) => {
-            return !appointments.some((obj2) => isDateRangeEqual(obj1, obj2));
-          });
-
-          const data = [
-            ...availabilities,
-            ...filteredUnavailabilities,
-            ...appointments,
-          ];
-          successCallback(data);
-        } catch (error) {
-          failureCallback(error);
-        }
-      },
       eventClick: function (info) {
         openInfosModal();
         eventsInfos.value = info;
@@ -279,10 +158,99 @@ export default {
       updateWidth();
     });
 
+    allDatasStore.$subscribe((mutation, state) => {
+      allDatas.value = state.allDatas;
+    });
+
+    watch(
+      () => allDatas.value,
+      (newVal) => {
+        refetchEvents();
+        appointments.value = [];
+        availabilities.value = [];
+        unavailabilities.value = [];
+
+        newVal.appointments.length > 0
+          ? newVal.appointments
+              .filter((data) =>
+                [("accepted", "finished")].includes(data.status)
+              )
+              .forEach((data) => {
+                const appointment = {
+                  type: "appointment",
+                  id: data.id,
+                  title: "Rendez-vous",
+                  start: new Date(data.start_date),
+                  end: new Date(data.end_date),
+                  price: data.price,
+                  comment: data.comment,
+                  seller_comment: data.seller_comment,
+                  status: data.status,
+                  customer_id: data.customer_id,
+                  services: data.services,
+                  borderColor: "0000FF",
+                  color: "#4DBFF7",
+                };
+                appointments.value.push(appointment);
+              })
+          : [];
+
+        newVal.availabilities.length > 0
+          ? newVal.availabilities.forEach((date) => {
+              if (
+                minDuration(date.start_date, date.end_date) &&
+                date.available
+              ) {
+                const availability = {
+                  type: "availability",
+                  title: "Disponible",
+                  start: new Date(date.start_date),
+                  end: new Date(date.end_date),
+                  available: date.available,
+                  id: date.id,
+                  color: "#EEFFEE",
+                  borderColor: "#66CC00",
+                  textColor: "black",
+                };
+                availabilities.value.push(availability);
+              } else if (
+                minDuration(date.start_date, date.end_date) &&
+                !date.available
+              ) {
+                unavailabilities.value.push({
+                  type: "unavailability",
+                  title: "INDISPO",
+                  start: new Date(date.start_date),
+                  end: new Date(date.end_date),
+                  available: date.available,
+                  id: date.id,
+                  color: "#FC5C5C",
+                  borderColor: "#FF0000",
+                  textColor: "black",
+                });
+              }
+            })
+          : [];
+        if (unavailabilities.value.length > 0) {
+          filteredUnavailabilities.value = unavailabilities.value.filter(
+            (obj1) => {
+              return !appointments.value.some((obj2) =>
+                isDateRangeEqual(obj1, obj2)
+              );
+            }
+          );
+        }
+        calendarRef.value.getApi().addEventSource(appointments.value);
+        calendarRef.value.getApi().addEventSource(availabilities.value);
+        calendarRef.value
+          .getApi()
+          .addEventSource(filteredUnavailabilities.value);
+      }
+    );
+
     return {
       calendarRef,
       calendarOptions,
-      refetchEvents,
       closeCreateAvailability,
       createAvailabilityModal,
       infosEventsModal,
@@ -312,7 +280,6 @@ export default {
     >
       <CreateAvailabilityForm
         @closeModal="closeCreateAvailability"
-        @refetchEvents="refetchEvents"
         :selectedDates="selectedDates"
       />
     </Modal>
@@ -320,12 +287,10 @@ export default {
       :isOpen="infosEventsModal"
       :title="modalTitleEvents"
       @update:isOpen="(value) => (infosEventsModal = value)"
-      @refetchEvents="refetchEvents"
     >
       <InfosEvents
         :eventsInfos="eventsInfos"
         @closeEvents="closeInfosEvents"
-        @refetchEvents="refetchEvents"
         @modalTitle="handleModalTitle"
     /></Modal>
     <FullCalendar

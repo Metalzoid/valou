@@ -338,7 +338,6 @@ export default function useApi() {
           const datas = JSON.parse(newData);
           if (typeof datas.message === "object") {
             allDatasStore.saveDatas(datas.message);
-            console.log(datas.message);
           }
         });
       }

@@ -7,7 +7,7 @@ const props = defineProps({
   eventsInfos: Object,
 });
 
-const emit = defineEmits(["closeEvents", "refetchEvents", "modalTitle"]);
+const emit = defineEmits(["closeEvents", "modalTitle"]);
 
 const toggleForm = ref(false);
 
@@ -78,10 +78,6 @@ const getUserInfos = async (id, type) => {
   }
 };
 
-const refetchEvents = () => {
-  emit("refetchEvents");
-};
-
 const isFutureEvent = (endDate) => {
   const endDateTime = new Date(endDate);
   const currentTime = new Date();
@@ -92,7 +88,6 @@ const deleteAvailability = async () => {
   try {
     const response = await deleteData(`availabilities/${event.value.id}`);
     if (response.success) {
-      refetchEvents();
       closeModal();
     }
   } catch (error) {
@@ -119,7 +114,6 @@ const updateAppointment = async () => {
         text: "Mise à jour réussie.",
         icon: "success",
       });
-      refetchEvents();
       closeModal();
     }
   } catch (error) {
@@ -158,7 +152,6 @@ const updateAvailability = async () => {
     });
     form.value.clear();
     closeModal();
-    refetchEvents();
   } else {
     form.value.setErrors(errors);
     errors.forEach((err) => {

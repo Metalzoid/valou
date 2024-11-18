@@ -3,7 +3,7 @@ const { postData } = useApi();
 const { $swal } = useNuxtApp();
 const allDatasStore = useAllDatasStore();
 
-const emit = defineEmits(["closeModal", "refetchEvents"]);
+const emit = defineEmits(["closeModal"]);
 
 const props = defineProps({
   selectedDates: Object,
@@ -13,10 +13,6 @@ const toggleHourly = ref(false);
 
 const closeModal = () => {
   emit("closeModal");
-};
-
-const refetchEvents = () => {
-  emit("refetchEvents");
 };
 
 const state = reactive({
@@ -73,7 +69,6 @@ const onSubmit = async () => {
     });
     form.value.clear();
     closeModal();
-    refetchEvents();
   } else {
     const errors = Object.entries(response.data.errors).map(
       ([path, message]) => ({

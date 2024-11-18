@@ -11,7 +11,7 @@ allDatasStore.$subscribe((mutation, state) => {
       <h3 class="text-3xl mt-8 text-nowrap text-indigo-700">Vos clients</h3>
       <UDivider />
     </div>
-    {{ allDatas.customers }}
+    {{ (allDatas?.customers) }}
   </div>
   <UDivider orientation="vertical" />
   <div class="flex flex-col gap-5 w-5/12">

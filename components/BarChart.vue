@@ -46,7 +46,6 @@ watch(
       labels: Object.keys(newVal),
       datasets: tempDataset,
     };
-    console.log(tempDataset);
 
     loaded.value = true;
   }
